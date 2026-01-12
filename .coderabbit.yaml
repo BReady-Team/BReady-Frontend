@@ -4,18 +4,9 @@ language: 'ko-KR'
 early_access: true
 
 tone_instructions: |
-  한국어(ko-KR)로 정중하고 협업적인 톤의 코드 리뷰를 제공합니다.
-  비판보다는 개선 방향과 근거를 중심으로 설명하며,
-  React + TypeScript 기반 프론트엔드 설계 관점에서 리뷰합니다.
-  다음 사항을 중점적으로 확인합니다:
-  - React 컴포넌트 설계 및 책임 분리
-  - 불필요한 리렌더링 가능성
-  - hooks 사용 규칙 준수 여부
-  - 상태 관리 위치의 적절성
-  - props / state / derived state 구분
-  - 접근성(a11y) 기본 사항
-  - Tailwind CSS 사용 일관성
-  - 네트워크 요청/에러 처리 패턴
+  한국어로 정중하고 협업적인 톤의 코드 리뷰를 제공합니다.
+  비판보다는 개선 방향과 그 이유를 중심으로 설명합니다.
+  리뷰는 팀 협업을 돕는 것을 목표로 합니다.
 
 reviews:
   profile: 'assertive'
@@ -25,7 +16,6 @@ reviews:
   collapse_walkthrough: true
   abort_on_close: true
 
-  # 리뷰 대상 경로
   path_filters:
     - 'src/**'
     - '.github/**'
@@ -45,61 +35,35 @@ reviews:
     - '!**/*.lock'
     - '!**/*.md'
 
-  # 프론트엔드 코드 리뷰 기준 설정
   path_instructions:
     - path: 'src/**'
       instructions: |
-        [파일 / 컴포넌트 구조]
-        - 한 파일은 하나의 책임만 가질 것
-        - 컴포넌트와 훅, 유틸 함수 분리 권장
-        - 페이지 컴포넌트는 UI 조합 역할에 집중
+        [리뷰 중점 사항]
+        - React 컴포넌트 책임 분리 여부
+        - 불필요한 리렌더링 가능성
+        - Hooks 규칙 준수 및 의존성 배열 검토
+        - 상태 관리 위치의 적절성
+        - props / state / derived state 구분
+        - 접근성(a11y) 기본 사항
+        - Tailwind CSS 클래스 사용 일관성
+        - 네트워크 요청 및 에러 처리 패턴
 
         [네이밍 규칙]
         - 컴포넌트: PascalCase
         - 훅: useXxx
-        - 변수 / 함수: camelCase
+        - 변수/함수: camelCase
         - 상수: UPPER_SNAKE_CASE
         - 이벤트 핸들러: handleXxx
 
-        [React Hooks 규칙]
-        - hooks는 조건문/반복문 내부에서 호출 금지
-        - 의존성 배열 누락 여부 지적
-        - useEffect 남용 지양 (파생 상태는 계산으로 해결)
-        - useMemo / useCallback은 성능 이슈가 명확할 때만 사용
-
-        [상태 관리 기준]
-        - 단일 컴포넌트 전용 상태는 useState
-        - 여러 컴포넌트 공유 상태는 상위로 끌어올리거나 전역 상태 고려
-        - props drilling 과도 여부 지적
-        - derived state 중복 저장 금지
-
-        [비동기 / API 처리]
-        - API 호출은 컴포넌트 외부로 분리 권장
-        - 로딩 / 에러 / 성공 상태 명확히 구분
-        - try/catch 누락 여부 확인
-        - abort / cleanup 필요성 지적
-
-        [렌더링 / 성능]
+        [성능/구조]
         - key 누락 여부
-        - 불필요한 재렌더링 가능성
-        - 리스트 렌더링 시 index key 사용 여부 지적
+        - index key 사용 지양
+        - 불필요한 useEffect/useMemo 사용 지적
 
-        [접근성(a11y)]
-        - button/div 역할 혼용 여부
-        - aria-label 필요성
-        - 클릭 가능한 요소에 키보드 접근 가능 여부
-
-        [Tailwind CSS 가이드]
-        - 의미 없는 class 중복 지적
-        - spacing / color 토큰 일관성
-        - inline style 사용 지양
-        - 조건부 클래스는 clsx / cn 사용 권장
-
-        [TypeScript 기준]
+        [TypeScript]
         - any 사용 지양
-        - 명확한 타입 선언 권장
-        - props / API 응답 타입 정의 여부
-        - 불필요한 optional 남용 지적
+        - props 및 API 응답 타입 명확성
+        - optional 남용 여부
 
   auto_review:
     enabled: true
