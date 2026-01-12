@@ -9,7 +9,14 @@
     "preview": "vite preview",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -33,6 +40,8 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-unused-imports": "^4.3.0",
     "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
