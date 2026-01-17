@@ -105,7 +105,7 @@ export default function HomePage() {
       </div>
 
       <div className="fixed bottom-8 right-8 text-[10px] text-foreground/35 tracking-widest">
-        © 2025
+        © 2026
       </div>
 
       <div className="fixed bottom-8 left-8 flex items-center gap-2">
