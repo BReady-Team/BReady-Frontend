@@ -97,20 +97,20 @@ export default function HomePage() {
       </main>
 
       <div className="fixed bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-8 text-xs">
-        <span className="tracking-widest text-primary/40">PLAN</span>
-        <span className="w-8 h-px bg-primary/30" />
-        <span className="tracking-widest text-foreground/30">TRIGGER</span>
-        <span className="w-8 h-px bg-primary/30" />
-        <span className="tracking-widest text-primary/40">FLOW</span>
+        <span className="tracking-widest text-primary/55">PLAN</span>
+        <span className="w-8 h-px bg-primary/40" />
+        <span className="tracking-widest text-foreground/45">TRIGGER</span>
+        <span className="w-8 h-px bg-primary/40" />
+        <span className="tracking-widest text-primary/55">FLOW</span>
       </div>
 
-      <div className="fixed bottom-8 right-8 text-[10px] text-foreground/20 tracking-widest">
+      <div className="fixed bottom-8 right-8 text-[10px] text-foreground/35 tracking-widest">
         © 2025
       </div>
 
       <div className="fixed bottom-8 left-8 flex items-center gap-2">
-        <div className="w-12 h-px bg-gradient-to-r from-primary/40 to-transparent" />
-        <div className="w-1.5 h-1.5 rounded-full bg-primary/30" />
+        <div className="w-12 h-px bg-gradient-to-r from-primary/55 to-transparent" />
+        <div className="w-1.5 h-1.5 rounded-full bg-primary/45" />
       </div>
     </div>
   )
