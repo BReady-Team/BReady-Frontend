@@ -61,18 +61,6 @@ export default function HomePage() {
           }}
         />
       </div>
-
-      <header className="fixed top-0 left-0 right-0 z-50">
-        <nav className="flex items-center justify-between px-8 py-6 md:px-16">
-          <Link to="/" className="text-sm font-medium text-foreground/70 hover:text-primary">
-            BReady
-          </Link>
-          <Link to="/login" className="text-sm font-medium text-foreground/70 hover:text-primary">
-            Login
-          </Link>
-        </nav>
-      </header>
-
       <main className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center">
         <h1
           className="text-[12vw] md:text-[10vw] lg:text-[8vw] font-bold tracking-[-0.04em] leading-[0.85] bg-clip-text text-transparent"

@@ -15,6 +15,7 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setTimeout(() => {
+      setIsLoading(false)
       navigate('/plans')
     }, 500)
   }
