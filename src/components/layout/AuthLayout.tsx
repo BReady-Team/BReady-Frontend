@@ -1,5 +1,5 @@
-import type { PropsWithChildren } from 'react'
+import { Outlet } from 'react-router-dom'
 
-export default function AuthLayout({ children }: PropsWithChildren) {
-  return <>{children}</>
+export default function AuthLayout() {
+  return <Outlet />
 }
