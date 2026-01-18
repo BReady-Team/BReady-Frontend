@@ -2,6 +2,7 @@ import { ChevronDown, GripVertical, Plus, Zap } from 'lucide-react'
 import type { Category } from '@/types/plan'
 import PlaceItem from './PlaceItem'
 import { cn } from '@/lib/utils'
+import { categoryMeta } from '../constants/categoryMeta'
 
 interface CategoryCardProps {
   category: Category
@@ -23,7 +24,7 @@ export default function CategoryCard({
   onSearch,
 }: CategoryCardProps) {
   const { type, representativePlace, candidates } = category
-
+  const { label, Icon } = categoryMeta[type]
   return (
     <div
       className={cn(
@@ -38,12 +39,12 @@ export default function CategoryCard({
           <GripVertical className="h-4 w-4" />
         </div>
 
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
-          {type}
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
         </div>
 
         <div className="flex-1">
-          <span className="font-medium">{type}</span>
+          <span className="font-medium">{label}</span>
           <span className="ml-2 text-xs text-muted-foreground">후보 {candidates.length}개</span>
         </div>
 
