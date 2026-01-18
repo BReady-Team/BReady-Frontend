@@ -5,18 +5,15 @@ import { cn } from '@/lib/utils'
 import { mockSearchResults } from '../mock/mockPlans'
 
 interface SearchPanelProps {
-  isOpen: boolean
   onClose: () => void
   onAddPlace: (place: Place) => void
 }
 
 /* 후보 장소 추가용 패널 -> 검색 , AI 추천, 지도 선택 기능 */
-export default function SearchPanel({ isOpen, onClose, onAddPlace }: SearchPanelProps) {
+export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Place[]>([])
   const [isLoading, setIsLoading] = useState(false)
-
-  if (!isOpen) return null
 
   /* 검색 실행 */
   const handleSearch = (e: React.FormEvent) => {
