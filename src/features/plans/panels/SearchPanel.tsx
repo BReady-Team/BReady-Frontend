@@ -38,7 +38,16 @@ export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm" onClick={onClose} />
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="패널 닫기"
+        className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm"
+        onClick={onClose}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') onClose()
+        }}
+      />
 
       <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-border bg-background shadow-xl">
         <header className="flex items-center justify-between border-b border-border/50 p-4">

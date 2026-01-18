@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Calendar, MapPin } from 'lucide-react'
-
+import type { Place } from '@/types/plan'
 import { mockPlans } from '../mock/mockPlans'
 import type { Category, CategoryType } from '@/types/plan'
 
@@ -13,8 +13,8 @@ import { formatKoreanDate } from '@/lib/date'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
-  const plan = mockPlans.find(p => p.id === planId) ?? mockPlans[0]
-  const [categories, setCategories] = useState<Category[]>(plan.categories)
+  const plan = useMemo(() => mockPlans.find(p => p.id === planId) ?? mockPlans[0], [planId])
+  const [categories, setCategories] = useState<Category[]>(() => plan.categories)
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<'none' | 'search' | 'trigger'>('none')
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
@@ -59,7 +59,7 @@ export default function PlanDetailPage() {
     )
   }
 
-  const handleAddPlace = (categoryId: string, place: any) => {
+  const handleAddPlace = (categoryId: string, place: Category['candidates'][number]) => {
     setCategories(prev =>
       prev.map(cat =>
         cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, place] } : cat,
@@ -74,9 +74,27 @@ export default function PlanDetailPage() {
     )
   }
 
-  const handleChangePlace = (placeId: string) => {
+  const handleChangePlace = (place: Place) => {
     if (!activeCategoryId) return
-    handleSelectRepresentative(activeCategoryId, placeId)
+
+    setCategories(prev =>
+      prev.map(cat => {
+        if (cat.id !== activeCategoryId) return cat
+
+        const exists = cat.candidates.some(p => p.id === place.id)
+
+        const updatedCandidates = exists ? cat.candidates : [...cat.candidates, place]
+
+        return {
+          ...cat,
+          candidates: updatedCandidates.map(p => ({
+            ...p,
+            isRepresentative: p.id === place.id,
+          })),
+          representativePlace: { ...place, isRepresentative: true },
+        }
+      }),
+    )
   }
 
   return (

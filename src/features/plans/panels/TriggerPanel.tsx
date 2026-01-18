@@ -33,8 +33,10 @@ interface TriggerPanelProps {
   onClose: () => void
   onKeep: () => void
   onChangeCategory: (type: CategoryType) => void
-  onChangePlace: (placeId: string) => void
+  onChangePlace: (place: Place) => void
 }
+
+type PlaceTab = 'candidates' | 'recommend'
 
 /* 트리거 발생 시 대응 관련 패널 */
 export default function TriggerPanel({
@@ -51,7 +53,7 @@ export default function TriggerPanel({
     'select',
   )
   const [selectedTrigger, setSelectedTrigger] = useState<TriggerType | null>(null)
-  const [placeTab, setPlaceTab] = useState<'candidates' | 'recommend'>('candidates')
+  const [placeTab, setPlaceTab] = useState<PlaceTab>('candidates')
 
   if (!isOpen) return null
 
@@ -66,8 +68,14 @@ export default function TriggerPanel({
   return (
     <>
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="패널 닫기"
         className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm"
         onClick={resetAndClose}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') resetAndClose()
+        }}
       />
 
       <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-border bg-background shadow-xl">
@@ -210,10 +218,10 @@ export default function TriggerPanel({
             <>
               {/* 탭 */}
               <div className="flex gap-1 rounded-lg bg-secondary/50 p-1">
-                {['candidates', 'recommend'].map(tab => (
+                {(['candidates', 'recommend'] as PlaceTab[]).map(tab => (
                   <button
                     key={tab}
-                    onClick={() => setPlaceTab(tab as any)}
+                    onClick={() => setPlaceTab(tab)}
                     className={cn(
                       'flex-1 rounded-md px-3 py-2 text-xs font-medium',
                       placeTab === tab ? 'bg-background shadow' : 'text-muted-foreground',
@@ -232,7 +240,7 @@ export default function TriggerPanel({
                     <button
                       key={place.id}
                       onClick={() => {
-                        onChangePlace(place.id)
+                        onChangePlace(place)
                         resetAndClose()
                       }}
                       className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50"
@@ -254,7 +262,7 @@ export default function TriggerPanel({
                   <button
                     key={place.id}
                     onClick={() => {
-                      onChangePlace(place.id)
+                      onChangePlace(place)
                       resetAndClose()
                     }}
                     className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50"

@@ -62,6 +62,7 @@ export default function CategoryCard({
 
         <div className="mt-4">
           <button
+            type="button"
             onClick={e => {
               e.stopPropagation()
               onTrigger()
@@ -80,6 +81,7 @@ export default function CategoryCard({
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">후보 장소</p>
             <button
+              type="button"
               onClick={e => {
                 e.stopPropagation()
                 onSearch()
