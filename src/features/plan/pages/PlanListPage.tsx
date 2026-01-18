@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import type { PlanSummaryDTO } from '../types'
 import { fetchPlanSummaries } from '../api'
@@ -26,14 +24,14 @@ export default function PlanListPage() {
             {loading ? '…' : `${plans.length} plans`}
           </p>
         </div>
-        <NewPlanButton onClick={() => {}} />
+        <NewPlanButton />
       </header>
 
       <section className="space-y-4">
         {loading ? (
           <div className="text-sm text-muted-foreground">불러오는 중...</div>
         ) : (
-          plans.map(plan => <PlanCard key={plan.id} plan={plan} onClick={() => {}} />)
+          plans.map(plan => <PlanCard key={plan.id} plan={plan} />)
         )}
       </section>
     </main>
