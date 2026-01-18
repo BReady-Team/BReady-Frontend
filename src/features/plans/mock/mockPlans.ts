@@ -1,4 +1,4 @@
-import type { CategoryType, TriggerType, Place, Plan } from '../mock/types'
+import type { CategoryType, TriggerType, Place, Plan } from '@/types/plan'
 
 export const categoryLabels: Record<CategoryType, { label: string }> = {
   MEAL: { label: '식사' },

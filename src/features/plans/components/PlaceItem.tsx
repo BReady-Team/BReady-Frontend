@@ -1,6 +1,6 @@
 import { MapPin, Star, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Place } from '../mock/types'
+import type { Place } from '@/types/plan'
 
 interface PlaceItemProps {
   place: Place
