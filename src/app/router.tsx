@@ -5,6 +5,7 @@ import SignupPage from '../features/auth/pages/SignupPage'
 import MainLayout from '../components/layout/MainLayout'
 import AuthLayout from '../components/layout/AuthLayout'
 import PlanListPage from '../features/plan/pages/PlanListPage'
+import PlanCreatePage from '@/features/plan/pages/PlanCreatePage'
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/plans', element: <PlanListPage /> },
+      { path: '/plans/new', element: <PlanCreatePage /> },
     ],
   },
 ])
