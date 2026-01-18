@@ -11,11 +11,13 @@ export function PlanCard({ plan }: Props) {
   return (
     <Link
       to={`/plans/${plan.id}`}
-      className="block w-full rounded-2xl border border-border/40 bg-card p-6 text-left shadow-sm hover:bg-secondary/10 transition-colors"
+      className="group block w-full rounded-2xl border border-border/40 bg-card p-6 text-left shadow-sm transition-colors duration-200 hover:border-primary/60 hover:bg-secondary/10"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">{plan.title}</h3>
+          <h3 className="text-lg font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
+            {plan.title}
+          </h3>
 
           <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
@@ -31,7 +33,7 @@ export function PlanCard({ plan }: Props) {
           <PlanCategoryChips categories={plan.categories} />
         </div>
 
-        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        <ChevronRight className="h-5 w-5 text-muted-foreground transition-colors duration-200 group-hover:text-primary" />
       </div>
     </Link>
   )
