@@ -6,8 +6,8 @@ export function NewPlanButton() {
   const navigate = useNavigate()
 
   return (
-    <Button onClick={() => navigate('/plans/new')} className="gap-2">
-      <Plus className="h-4 w-4" />
+    <Button type="button" onClick={() => navigate('/plans/new')} className="gap-2">
+      <Plus className="h-4 w-4" aria-hidden="true" />
       New Plan
     </Button>
   )

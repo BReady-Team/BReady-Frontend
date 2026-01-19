@@ -21,11 +21,11 @@ export function PlanCard({ plan }: Props) {
 
           <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
-              <CalendarDays className="h-4 w-4" />
+              <CalendarDays className="h-4 w-4" aria-hidden="true" />
               {plan.planDate}
             </span>
             <span className="inline-flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-4 w-4" aria-hidden="true" />
               {plan.region}
             </span>
           </div>

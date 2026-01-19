@@ -7,12 +7,32 @@ import { NewPlanButton } from '../components/NewPlanButton'
 export default function PlanListPage() {
   const [plans, setPlans] = useState<PlanSummaryDTO[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchPlanSummaries().then(data => {
-      setPlans(data)
-      setLoading(false)
-    })
+    let cancelled = false
+
+    const run = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const data = await fetchPlanSummaries()
+        if (cancelled) return
+
+        setPlans(data)
+      } catch {
+        if (cancelled) return
+        setError('플랜 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (
@@ -30,6 +50,8 @@ export default function PlanListPage() {
       <section className="space-y-4">
         {loading ? (
           <div className="text-sm text-muted-foreground">불러오는 중...</div>
+        ) : error ? (
+          <div className="text-sm text-destructive">{error}</div>
         ) : (
           plans.map(plan => <PlanCard key={plan.id} plan={plan} />)
         )}

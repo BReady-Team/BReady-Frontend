@@ -60,6 +60,7 @@ export default function PlanCreatePage() {
             <div className="space-y-1">
               <span className="text-xs text-muted-foreground">년</span>
               <Input
+                aria-label="년"
                 placeholder="2026"
                 value={year}
                 onChange={e => setYear(onlyDigits(e.target.value, 4))}
@@ -70,6 +71,7 @@ export default function PlanCreatePage() {
             <div className="space-y-1">
               <span className="text-xs text-muted-foreground">월</span>
               <Input
+                aria-label="월"
                 placeholder="1"
                 value={month}
                 onChange={e => setMonth(onlyDigits(e.target.value, 2))}
@@ -80,6 +82,7 @@ export default function PlanCreatePage() {
             <div className="space-y-1">
               <span className="text-xs text-muted-foreground">일</span>
               <Input
+                aria-label="일"
                 placeholder="20"
                 value={day}
                 onChange={e => setDay(onlyDigits(e.target.value, 2))}
