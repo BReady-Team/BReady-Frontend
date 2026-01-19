@@ -14,7 +14,7 @@ export default function StatsPage() {
   const totalPlans = mockPlans.length
   const totalSwitches = mockPlanStats.reduce((acc, s) => acc + s.totalSwitches, 0)
   const avgSwitchesPerPlan = totalPlans > 0 ? (totalSwitches / totalPlans).toFixed(1) : '0'
-
+  const planTitleMap = new Map(mockPlans.map(p => [p.id, p.title]))
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
       {/* 헤더 */}
@@ -50,7 +50,7 @@ export default function StatsPage() {
 
       <div className="grid gap-8 lg:grid-cols-5 mt-10">
         <TriggerAnalysis stats={mockPlanStats} />
-        <RecentActivity logs={mockSwitchLogs} />
+        <RecentActivity logs={mockSwitchLogs} planTitleMap={planTitleMap} />
       </div>
 
       <PlanStatsList plans={mockPlans} stats={mockPlanStats} />

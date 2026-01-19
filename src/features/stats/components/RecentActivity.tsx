@@ -1,15 +1,17 @@
 import type { SwitchLog } from '../types/statsTypes'
-import { mockPlans } from '@/features/plans/mock/mockPlans'
 import { triggerUiMap } from '../constants/triggerUi'
 import { BarChart3, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface Props {
   logs: SwitchLog[]
+  planTitleMap: Map<string, string>
 }
 
-export default function RecentActivity({ logs }: Props) {
-  const recentLogs = logs.slice(0, 5)
+export default function RecentActivity({ logs, planTitleMap }: Props) {
+  const recentLogs = [...logs]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
 
   return (
     <div className="lg:col-span-2 rounded-2xl border border-border/50 bg-card">
@@ -39,20 +41,18 @@ export default function RecentActivity({ logs }: Props) {
         )}
 
         {recentLogs.map(log => {
-          const plan = mockPlans.find(p => p.id === log.planId)
-          const { Icon, className } = triggerUiMap[log.triggerType]
+          const title = planTitleMap.get(log.planId) ?? '알 수 없는 플랜'
+          const ui = triggerUiMap[log.triggerType]
 
           return (
             <div key={log.id} className="flex items-center gap-4 p-4">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${className}`}>
-                <Icon className="h-5 w-5" />
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${ui.color}`}>
+                <ui.icon className="h-5 w-5" />
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium">{plan?.title ?? '알 수 없는 플랜'}</p>
-                <p className="text-xs text-muted-foreground">
-                  {log.decision === 'KEEP' ? '그대로 진행' : '장소 변경'}
-                </p>
+                <p className="text-sm font-medium truncate">{title}</p>
+                <p className="text-xs text-muted-foreground">{ui.label}</p>
               </div>
 
               <div className="text-right">

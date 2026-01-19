@@ -4,28 +4,34 @@ import type { TriggerType } from '@/types/plan'
 export const triggerUiMap: Record<
   TriggerType,
   {
-    Icon: React.ElementType
-    className: string
+    icon: React.ElementType
+    label: string
+    color: string
   }
 > = {
   WEATHER_BAD: {
-    Icon: CloudRain,
-    className: 'bg-blue-500/20 text-blue-400',
+    icon: CloudRain,
+    label: '날씨 악화',
+    color: 'bg-blue-500/20 text-blue-400',
   },
   WAITING_LONG: {
-    Icon: Clock,
-    className: 'bg-amber-500/20 text-amber-400',
-  },
-  FATIGUE: {
-    Icon: Battery,
-    className: 'bg-purple-500/20 text-purple-400',
+    icon: Clock,
+    label: '대기시간 과다',
+    color: 'bg-amber-500/20 text-amber-400',
   },
   CLOSED: {
-    Icon: XCircle,
-    className: 'bg-red-500/20 text-red-400',
+    icon: XCircle,
+    label: '영업 중단',
+    color: 'bg-red-500/20 text-red-400',
+  },
+  FATIGUE: {
+    icon: Battery,
+    label: '체력 저하',
+    color: 'bg-purple-500/20 text-purple-400',
   },
   DISTANCE_FAR: {
-    Icon: MapPin,
-    className: 'bg-green-500/20 text-green-400',
+    icon: MapPin,
+    label: '거리 부담',
+    color: 'bg-green-500/20 text-green-400',
   },
 }

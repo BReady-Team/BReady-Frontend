@@ -1,6 +1,5 @@
 import type { PlanStats } from '../types/statsTypes'
 import type { TriggerType } from '@/types/plan'
-import { triggerLabels } from '@/features/plans/mock/mockPlans'
 import { triggerUiMap } from '../constants/triggerUi'
 import { Activity } from 'lucide-react'
 
@@ -20,7 +19,7 @@ export default function TriggerAnalysis({ stats }: Props) {
     {} as Record<TriggerType, number>,
   )
 
-  const entries = (Object.keys(triggerLabels) as TriggerType[])
+  const entries = (Object.keys(triggerUiMap) as TriggerType[])
     .map(type => ({
       type,
       count: counts[type] ?? 0,
@@ -46,7 +45,7 @@ export default function TriggerAnalysis({ stats }: Props) {
         )}
 
         {entries.map((entry, index) => {
-          const { Icon, className } = triggerUiMap[entry.type]
+          const ui = triggerUiMap[entry.type]
           const percentage = totalCount > 0 ? Math.round((entry.count / totalCount) * 100) : 0
 
           return (
@@ -54,13 +53,13 @@ export default function TriggerAnalysis({ stats }: Props) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${className}`}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${ui.color}`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <ui.icon className="h-4 w-4" />
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{triggerLabels[entry.type]}</span>
+                    <span className="text-sm font-medium">{ui.label}</span>
 
                     {index === 0 && entry.count > 0 && (
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
