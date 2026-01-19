@@ -6,6 +6,7 @@ import SignupPage from '../features/auth/pages/SignupPage'
 import PlanDetailPageWrapper from '../features/plans/pages/PlanDetailPageWrapper'
 import MainLayout from '../components/layout/MainLayout'
 import AuthLayout from '../components/layout/AuthLayout'
+import StatsPage from '../features/stats/pages/StatsPage'
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
         path: '/plans/:planId',
         element: <PlanDetailPageWrapper />,
       },
+      { path: '/stats', element: <StatsPage /> },
     ],
   },
 ])
