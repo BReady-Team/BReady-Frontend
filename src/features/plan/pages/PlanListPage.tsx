@@ -36,7 +36,7 @@ export default function PlanListPage() {
   }, [])
 
   return (
-    <main className="p-6 space-y-6">
+    <main className="mx-auto w-full max-w-5xl px-6 py-10 space-y-6">
       <header className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">My Plans</h1>
