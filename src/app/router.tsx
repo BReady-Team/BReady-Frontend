@@ -7,10 +7,9 @@ import PlanDetailPageWrapper from '../features/plans/pages/PlanDetailPageWrapper
 import MainLayout from '../components/layout/MainLayout'
 import AuthLayout from '../components/layout/AuthLayout'
 import StatsPage from '../features/stats/pages/StatsPage'
-import PlanListPage from '../features/plan/pages/PlanListPage'
-import PlanCreatePage from '@/features/plan/pages/PlanCreatePage'
+import PlanListPage from '../features/plans/pages/PlanListPage'
+import PlanCreatePage from '@/features/plans/pages/PlanCreatePage'
 import MyPage from '@/features/user/pages/MyPage'
-
 
 export const router = createBrowserRouter([
   {
