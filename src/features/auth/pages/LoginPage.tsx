@@ -4,19 +4,67 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAuthStore } from '@/stores/authStore'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+
+  const login = useAuthStore(state => state.login)
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
+
+    try {
+      /* TODO (나중에 API 붙이면 됨)
+       *
+       * const res = await authApi.login({ email, password })
+       * login({
+       *   accessToken: res.data.accessToken,
+       *   refreshToken: res.data.refreshToken,
+       *   user: res.data.user,
+       * })
+       */
+
+      // 지금은 mock 로그인으로 대체
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      login({
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        user: {
+          id: 1,
+          email,
+          nickname: '승인',
+        },
+      })
+
       navigate('/plans')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSocialLogin = (provider: 'KAKAO' | 'NAVER') => {
+    setIsLoading(true)
+
+    setTimeout(() => {
+      login({
+        accessToken: `${provider.toLowerCase()}-mock-access-token`,
+        refreshToken: `${provider.toLowerCase()}-mock-refresh-token`,
+        user: {
+          id: 2,
+          email: `${provider.toLowerCase()}@bready.dev`,
+          nickname: provider === 'KAKAO' ? '카카오유저' : '네이버유저',
+        },
+      })
+
+      navigate('/plans')
+      setIsLoading(false)
     }, 500)
   }
 
@@ -74,16 +122,19 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             type="button"
-            onClick={() => navigate('/plans')}
+            disabled={isLoading}
+            onClick={() => handleSocialLogin('KAKAO')}
           >
             <KakaoIcon className="mr-2 h-5 w-5" />
             카카오로 시작하기
           </Button>
+
           <Button
             variant="outline"
             className="w-full"
             type="button"
-            onClick={() => navigate('/plans')}
+            disabled={isLoading}
+            onClick={() => handleSocialLogin('NAVER')}
           >
             <NaverIcon className="mr-2 h-5 w-5" />
             네이버로 시작하기

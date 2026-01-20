@@ -1,15 +1,17 @@
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { User, BarChart2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
 
 export default function AppHeader() {
   const { pathname } = useLocation()
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link
-          to="/plans"
+          to={isLoggedIn ? '/plans' : '/'}
           className="text-xl font-semibold tracking-tight bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
         >
           BReady
