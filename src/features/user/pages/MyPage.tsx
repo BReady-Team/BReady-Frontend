@@ -6,7 +6,7 @@ import type { MyPageDTO } from '../types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-
+import { useAuthStore } from '@/stores/authStore'
 import {
   CalendarDays,
   Camera,
@@ -84,7 +84,7 @@ function SettingsRow(props: { icon: JSX.Element; title: string; onClick?: () => 
 
 export default function MyPage() {
   const navigate = useNavigate()
-
+  const logout = useAuthStore(s => s.logout)
   const [tab, setTab] = useState<TabKey>('overview')
 
   const [data, setData] = useState<MyPageDTO | null>(null)
@@ -201,6 +201,7 @@ export default function MyPage() {
   }
 
   const handleLogout = () => {
+    logout() // 전역 인증 상태 초기화
     navigate('/')
   }
 
