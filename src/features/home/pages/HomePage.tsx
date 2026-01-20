@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/stores/authStore'
 
 export default function HomePage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn)
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -77,7 +79,7 @@ export default function HomePage() {
         </p>
 
         <Link
-          to="/plans"
+          to={isLoggedIn ? '/plans' : '/login'}
           className="mt-16 inline-flex items-center gap-3 text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
         >
           시작하기 →
