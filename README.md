@@ -1,73 +1,45 @@
-# React + TypeScript + Vite
+# BReady 🌈
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> 계획은 A로 시작하지만, 하루는 B로 흘러간다.
 
-Currently, two official plugins are available:
+**BReady**는 비·혼잡·휴무·피로·교통 같은 변수로  
+원래 일정(A안)이 틀어졌을 때, **즉시 전환해서 쓸 수 있는 대체 일정(B안)** 을  
+미리 준비하고 공유하는 **Plan B 중심 일정 플랫폼**입니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 💡 문제 정의 
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+일상에서 사람들이 시간을 낭비하는 이유는  
+**계획이 없어서가 아니라, 계획이 깨지는 변수 때문**입니다.
 
-## Expanding the ESLint configuration
+변수가 생기면 사람들은 매번 같은 행동을 반복합니다.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. 급하게 검색하고  
+2. 근처를 대충 찾고  
+3. 이동과 대기를 반복하고  
+4. 결국 하루 만족도가 떨어집니다.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**문제는 장소 추천이 아니라, 전환 가능한 대체 플랜이 없다는 점**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🎯 BReady 기획 의도 
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+BReady는 하나의 일정을 **A안 + B안**으로 묶어 관리합니다.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **A안**: 원래 계획된 일정
+- **B안**: 변수가 발생했을 때 바로 전환할 대체 일정
+- **Trigger**: 비, 혼잡, 휴무, 피로, 교통 등 전환 조건
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+사용자는 장소가 아니라 **현재 상황(Trigger)** 기준으로  
+**지금 당장 쓸 수 있는 B안**을 탐색하고 선택할 수 있습니다.
+
+---
+
+
+## 😎 팀원 구성 (Client)
+| <img width="240" height="266" alt="설아 프로필" src="https://avatars.githubusercontent.com/u/192125242?v=4" /> | <img width="240" height="266" alt="승인 프로필" src="https://avatars.githubusercontent.com/u/144124353?s=400&u=9bda70cb07b771d6301ac64df65acb931406b09e&v=4" /> | 
+| :---: | :---: | 
+| [민설아](https://github.com/mymy1023) | [유승인](https://github.com/seung-in-Yoo) |
+| Frontend | Frontend |

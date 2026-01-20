@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: 'ko-KR'
+early_access: true
+
+tone_instructions: |
+  한국어로 정중하고 협업적인 톤의 코드 리뷰를 제공합니다.
+  비판보다는 개선 방향과 그 이유를 중심으로 설명합니다.
+  리뷰는 팀 협업을 돕는 것을 목표로 합니다.
+
+reviews:
+  profile: 'assertive'
+  high_level_summary: true
+  changed_files_summary: true
+  review_status: true
+  collapse_walkthrough: true
+  abort_on_close: true
+
+  path_filters:
+    - 'src/**'
+    - '.github/**'
+    - '.coderabbit.yaml'
+    - 'index.html'
+    - 'vite.config.*'
+    - 'tsconfig*.json'
+    - '!dist/**'
+    - '!build/**'
+    - '!out/**'
+    - '!coverage/**'
+    - '!node_modules/**'
+    - '!**/*.png'
+    - '!**/*.jpg'
+    - '!**/*.jpeg'
+    - '!**/*.svg'
+    - '!**/*.lock'
+    - '!**/*.md'
+
+  path_instructions:
+    - path: 'src/**'
+      instructions: |
+        [리뷰 중점 사항]
+        - React 컴포넌트 책임 분리 여부
+        - 불필요한 리렌더링 가능성
+        - Hooks 규칙 준수 및 의존성 배열 검토
+        - 상태 관리 위치의 적절성
+        - props / state / derived state 구분
+        - 접근성(a11y) 기본 사항
+        - Tailwind CSS 클래스 사용 일관성
+        - 네트워크 요청 및 에러 처리 패턴
+
+        [네이밍 규칙]
+        - 컴포넌트: PascalCase
+        - 훅: useXxx
+        - 변수/함수: camelCase
+        - 상수: UPPER_SNAKE_CASE
+        - 이벤트 핸들러: handleXxx
+
+        [성능/구조]
+        - key 누락 여부
+        - index key 사용 지양
+        - 불필요한 useEffect/useMemo 사용 지적
+
+        [TypeScript]
+        - any 사용 지양
+        - props 및 API 응답 타입 명확성
+        - optional 남용 여부
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - 'main'
+      - 'develop'
+    labels:
+      - '!wip'
+      - '!draft'
+      - '!skip-review'
+
+  tools:
+    gitleaks:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+
+chat:
+  auto_reply: true
+  art: false
+
+knowledge_base:
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
