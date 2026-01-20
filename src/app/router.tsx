@@ -9,6 +9,7 @@ import AuthLayout from '../components/layout/AuthLayout'
 import StatsPage from '../features/stats/pages/StatsPage'
 import PlanListPage from '../features/plan/pages/PlanListPage'
 import PlanCreatePage from '@/features/plan/pages/PlanCreatePage'
+import MyPage from '@/features/user/pages/MyPage'
 
 
 export const router = createBrowserRouter([
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
         path: '/plans/:planId',
         element: <PlanDetailPageWrapper />,
       },
+      { path: '/mypage', element: <MyPage /> },
       { path: '/stats', element: <StatsPage /> },
     ],
   },
