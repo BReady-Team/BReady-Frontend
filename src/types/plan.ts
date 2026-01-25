@@ -1,5 +1,10 @@
 export type CategoryType = 'MEAL' | 'CAFE' | 'EXHIBITION' | 'WALK' | 'SHOPPING' | 'REST'
-export type TriggerType = 'WEATHER_BAD' | 'WAITING_LONG' | 'CLOSED' | 'FATIGUE' | 'DISTANCE_FAR'
+export type TriggerType =
+  | 'WEATHER_BAD'
+  | 'WAITING_TOO_LONG'
+  | 'PLACE_CLOSED'
+  | 'FATIGUE'
+  | 'DISTANCE_TOO_FAR'
 
 export type Place = {
   id: string
