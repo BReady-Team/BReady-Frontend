@@ -1,12 +1,4 @@
-import axios from 'axios'
 import { http } from '@/lib/http'
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
 
 export interface SignupRequest {
   nickname: string
@@ -25,7 +17,7 @@ export interface TokenResponse {
 }
 
 export const signup = (payload: SignupRequest) => {
-  return api.post('/api/v1/auth/signup', payload)
+  return http.post('/api/v1/auth/signup', payload)
 }
 
 export const loginApi = (payload: LoginRequest) => {
