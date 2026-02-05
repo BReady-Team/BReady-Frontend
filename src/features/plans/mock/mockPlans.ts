@@ -11,10 +11,10 @@ export const categoryLabels: Record<CategoryType, { label: string }> = {
 
 export const triggerLabels: Record<TriggerType, string> = {
   WEATHER_BAD: '날씨 악화',
-  WAITING_LONG: '대기시간 과다',
-  CLOSED: '영업 중단',
+  WAITING_TOO_LONG: '대기시간 과다',
+  PLACE_CLOSED: '영업 중단',
   FATIGUE: '체력 저하',
-  DISTANCE_FAR: '거리 부담',
+  DISTANCE_TOO_FAR: '거리 부담',
 }
 
 const THUMBNAIL = '/seoul_forest.jpg'

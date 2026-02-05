@@ -18,10 +18,10 @@ import { cn } from '@/lib/utils'
 
 const triggerIcons: Record<TriggerType, React.ElementType> = {
   WEATHER_BAD: CloudRain,
-  WAITING_LONG: Clock,
-  CLOSED: XCircle,
+  WAITING_TOO_LONG: Clock,
+  PLACE_CLOSED: XCircle,
   FATIGUE: Battery,
-  DISTANCE_FAR: MapPin,
+  DISTANCE_TOO_FAR: MapPin,
 }
 
 interface TriggerPanelProps {
