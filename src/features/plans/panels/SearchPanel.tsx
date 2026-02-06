@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { X, Search, MapPin, Star, Plus, Sparkles } from 'lucide-react'
+
 import type { Place } from '@/types/plan'
-import type { PlaceCategoryType } from '@/lib/api/place'
+import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
 
 import { cn } from '@/lib/utils'
 import { mockSearchResults } from '../mock/mockPlans'
 
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { searchPlaces, createCandidate, type CreateCandidateRequest } from '@/lib/api/place'
+import { createCandidate, searchPlaces, type CreateCandidateRequest } from '@/lib/api/place'
+import { getCurrentLocation } from '@/lib/geolocation'
 
 interface SearchPanelProps {
   planId: number
@@ -26,15 +27,30 @@ export default function SearchPanel({
 }: SearchPanelProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Place[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(false)
+  const [isAiLoading, setIsAiLoading] = useState(false)
 
-  const { refetch, isFetching } = useQuery({
-    queryKey: ['place-search', categoryType],
-    queryFn: async () => {
-      const data = await searchPlaces(categoryType)
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-      const mapped: Place[] = data.map((p, idx) => ({
-        id: 20000 + idx,
+    setIsFetching(true)
+
+    try {
+      let lat: number | undefined
+      let lng: number | undefined
+
+      try {
+        const position = await getCurrentLocation()
+        lat = position.coords.latitude
+        lng = position.coords.longitude
+      } catch {
+        console.warn('위치 권한 거부 → 위치 없이 검색')
+      }
+
+      const data = await searchPlaces(categoryType, query, lat, lng)
+
+      const mapped: Place[] = data.map((p: PlaceSearchResponse) => ({
+        id: Number(p.externalId.replace('kakao-', '')),
         externalId: p.externalId,
         name: p.name,
         location: p.address ?? '',
@@ -44,37 +60,13 @@ export default function SearchPanel({
       }))
 
       setResults(mapped)
-      return mapped
-    },
-    enabled: false,
-  })
-
-  const mutation = useMutation({
-    mutationFn: (body: CreateCandidateRequest) => createCandidate(body),
-
-    onSuccess: res => {
-      const place = res.place
-
-      onAddPlace({
-        id: res.candidateId,
-        externalId: place.externalId,
-        name: place.name,
-        location: place.address ?? '',
-        rating: 0,
-        isIndoor: place.isIndoor ?? false,
-        thumbnailUrl: '/seoul_forest.jpg',
-        isRepresentative: false,
-      })
-    },
-  })
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    refetch()
+    } finally {
+      setIsFetching(false)
+    }
   }
 
-  const handleAdd = (place: Place) => {
-    mutation.mutate({
+  const handleAdd = async (place: Place) => {
+    const body: CreateCandidateRequest = {
       planId,
       categoryId,
       externalId: place.externalId!,
@@ -83,18 +75,32 @@ export default function SearchPanel({
       latitude: 0,
       longitude: 0,
       isIndoor: place.isIndoor,
-    })
+    }
+
+    const res = await createCandidate(body)
+
+    const savedPlace: Place = {
+      id: res.candidateId,
+      externalId: res.place.externalId,
+      name: res.place.name,
+      location: res.place.address ?? '',
+      rating: 0,
+      isIndoor: res.place.isIndoor ?? false,
+      thumbnailUrl: '/seoul_forest.jpg',
+      isRepresentative: false,
+    }
+
+    onAddPlace(savedPlace)
   }
 
   const handleRecommend = () => {
-    setIsLoading(true)
+    setIsAiLoading(true)
 
     setTimeout(() => {
       setResults(mockSearchResults)
-      setIsLoading(false)
+      setIsAiLoading(false)
     }, 500)
   }
-
   return (
     <>
       <div
@@ -142,7 +148,7 @@ export default function SearchPanel({
           {/* AI 추천 */}
           <button
             onClick={handleRecommend}
-            disabled={isLoading}
+            disabled={isAiLoading}
             className={cn(
               'flex w-full items-center justify-center gap-2',
               'h-12 rounded-lg text-sm font-medium',
@@ -151,10 +157,10 @@ export default function SearchPanel({
             )}
           >
             <Sparkles className="h-4 w-4" />
-            {isLoading ? '추천 중...' : 'AI 추천받기'}
+            {isAiLoading ? '추천 중...' : 'AI 추천받기'}
           </button>
 
-          {(isFetching || mutation.isPending) && <p className="text-sm">불러오는 중...</p>}
+          {(isFetching || isAiLoading) && <p className="text-sm">불러오는 중...</p>}
 
           {/* 검색 결과 */}
           {results.length > 0 && (

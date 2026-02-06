@@ -41,9 +41,20 @@ export const createCandidate = async (
   return res.data.data
 }
 
-export const searchPlaces = async (category: PlaceCategoryType): Promise<PlaceSearchResponse[]> => {
+export const searchPlaces = async (
+  category: PlaceCategoryType,
+  keyword?: string,
+  latitude?: number,
+  longitude?: number,
+) => {
   const res = await http.get('/api/v1/places/search', {
-    params: { category },
+    params: {
+      category,
+      keyword,
+      latitude,
+      longitude,
+      radius: 2000,
+    },
   })
 
   return res.data.data

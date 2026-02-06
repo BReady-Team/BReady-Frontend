@@ -28,7 +28,7 @@ interface TriggerPanelProps {
   isOpen: boolean
   categoryType: CategoryType
   candidates: Place[]
-  representativePlaceId: string
+  representativePlaceId: number
 
   onClose: () => void
   onKeep: () => void
