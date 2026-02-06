@@ -54,6 +54,8 @@ export default function SearchPanel({
         externalId: p.externalId,
         name: p.name,
         location: p.address ?? '',
+        latitude: p.latitude,
+        longitude: p.longitude,
         rating: 0,
         isIndoor: p.isIndoor ?? false,
         thumbnailUrl: '/seoul_forest.jpg',
@@ -72,8 +74,8 @@ export default function SearchPanel({
       externalId: place.externalId!,
       name: place.name,
       address: place.location,
-      latitude: 0,
-      longitude: 0,
+      latitude: place.latitude || 0,
+      longitude: place.longitude || 0,
       isIndoor: place.isIndoor,
     }
 

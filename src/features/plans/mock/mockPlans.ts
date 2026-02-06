@@ -25,6 +25,8 @@ export const mockSearchResults: Place[] = [
     externalId: 'mock-10001',
     name: '서울숲',
     location: '서울 성동구',
+    latitude: 37.544,
+    longitude: 127.055,
     rating: 4.8,
     isIndoor: false,
     thumbnailUrl: THUMBNAIL,

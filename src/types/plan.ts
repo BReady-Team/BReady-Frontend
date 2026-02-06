@@ -11,12 +11,12 @@ export type Place = {
   externalId?: string
   name: string
   location: string
+  latitude?: number
+  longitude?: number
   rating: number
   isIndoor: boolean
   thumbnailUrl?: string
   isRepresentative?: boolean
-  latitude?: number
-  longitude?: number
 }
 
 export type Category = {
