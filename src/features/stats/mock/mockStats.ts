@@ -2,25 +2,25 @@ import type { PlanStats, SwitchLog } from '../types/statsTypes'
 
 export const mockSwitchLogs: SwitchLog[] = [
   {
-    id: 'log-1',
-    planId: 'plan-1',
-    categoryId: 'cat-2',
+    id: 1,
+    planId: 1,
+    categoryId: 2,
     triggerType: 'WEATHER_BAD',
     decision: 'SWITCH',
     createdAt: '2026-01-20T14:30:00',
   },
   {
-    id: 'log-2',
-    planId: 'plan-1',
-    categoryId: 'cat-1',
+    id: 2,
+    planId: 1,
+    categoryId: 1,
     triggerType: 'WAITING_TOO_LONG',
     decision: 'SWITCH',
     createdAt: '2026-01-20T12:15:00',
   },
   {
-    id: 'log-3',
-    planId: 'plan-2',
-    categoryId: 'cat-5',
+    id: 3,
+    planId: 2,
+    categoryId: 5,
     triggerType: 'FATIGUE',
     decision: 'KEEP',
     createdAt: '2026-01-25T15:00:00',
@@ -29,7 +29,7 @@ export const mockSwitchLogs: SwitchLog[] = [
 
 export const mockPlanStats: PlanStats[] = [
   {
-    planId: 'plan-1',
+    planId: 1,
     totalSwitches: 2,
     triggerCounts: {
       WEATHER_BAD: 1,
@@ -41,7 +41,7 @@ export const mockPlanStats: PlanStats[] = [
     categoryChanges: 1,
   },
   {
-    planId: 'plan-2',
+    planId: 2,
     totalSwitches: 1,
     triggerCounts: {
       WEATHER_BAD: 0,

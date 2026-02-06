@@ -1,9 +1,9 @@
 import type { TriggerType } from '@/types/plan'
 
 export interface SwitchLog {
-  id: string
+  id: number
   planId: number
-  categoryId: string
+  categoryId: number
   triggerType: TriggerType
   decision: 'KEEP' | 'SWITCH'
   createdAt: string
