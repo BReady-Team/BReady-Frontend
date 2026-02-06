@@ -1,32 +1,91 @@
 import { useState } from 'react'
 import { X, Search, MapPin, Star, Plus, Sparkles } from 'lucide-react'
 import type { Place } from '@/types/plan'
+import type { PlaceCategoryType } from '@/lib/api/place'
+
 import { cn } from '@/lib/utils'
 import { mockSearchResults } from '../mock/mockPlans'
 
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { searchPlaces, createCandidate, type CreateCandidateRequest } from '@/lib/api/place'
+
 interface SearchPanelProps {
+  planId: number
+  categoryId: number
+  categoryType: PlaceCategoryType
   onClose: () => void
   onAddPlace: (place: Place) => void
 }
 
-/* 후보 장소 추가용 패널 -> 검색 , AI 추천, 지도 선택 기능 */
-export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
+export default function SearchPanel({
+  planId,
+  categoryId,
+  categoryType,
+  onClose,
+  onAddPlace,
+}: SearchPanelProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Place[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  /* 검색 실행 */
+  const { refetch, isFetching } = useQuery({
+    queryKey: ['place-search', categoryType],
+    queryFn: async () => {
+      const data = await searchPlaces(categoryType)
+
+      const mapped: Place[] = data.map((p, idx) => ({
+        id: 20000 + idx,
+        externalId: p.externalId,
+        name: p.name,
+        location: p.address ?? '',
+        rating: 0,
+        isIndoor: p.isIndoor ?? false,
+        thumbnailUrl: '/seoul_forest.jpg',
+      }))
+
+      setResults(mapped)
+      return mapped
+    },
+    enabled: false,
+  })
+
+  const mutation = useMutation({
+    mutationFn: (body: CreateCandidateRequest) => createCandidate(body),
+
+    onSuccess: res => {
+      const place = res.place
+
+      onAddPlace({
+        id: res.candidateId,
+        externalId: place.externalId,
+        name: place.name,
+        location: place.address ?? '',
+        rating: 0,
+        isIndoor: place.isIndoor ?? false,
+        thumbnailUrl: '/seoul_forest.jpg',
+        isRepresentative: false,
+      })
+    },
+  })
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-
-    setTimeout(() => {
-      setResults(mockSearchResults)
-      setIsLoading(false)
-    }, 300)
+    refetch()
   }
 
-  /* AI 추천 */
+  const handleAdd = (place: Place) => {
+    mutation.mutate({
+      planId,
+      categoryId,
+      externalId: place.externalId!,
+      name: place.name,
+      address: place.location,
+      latitude: 0,
+      longitude: 0,
+      isIndoor: place.isIndoor,
+    })
+  }
+
   const handleRecommend = () => {
     setIsLoading(true)
 
@@ -44,9 +103,6 @@ export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
         aria-label="패널 닫기"
         className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm"
         onClick={onClose}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') onClose()
-        }}
       />
 
       <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-border bg-background shadow-xl">
@@ -75,14 +131,10 @@ export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
                   'h-10 w-full rounded-md',
                   'bg-secondary/50 border border-border/50',
                   'pl-10 pr-3 text-sm',
-                  'focus:outline-none focus:ring-1 focus:ring-primary/30',
                 )}
               />
             </div>
-            <button
-              type="submit"
-              className="h-10 px-4 rounded-md border border-border/50 text-sm hover:bg-secondary"
-            >
+            <button className="h-10 px-4 rounded-md border border-border/50 text-sm hover:bg-secondary">
               검색
             </button>
           </form>
@@ -102,13 +154,7 @@ export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
             {isLoading ? '추천 중...' : 'AI 추천받기'}
           </button>
 
-          {/* 지도 영역 (UI) */}
-          <div className="h-40 rounded-lg border border-border/50 bg-secondary/40 flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <MapPin className="mx-auto h-6 w-6 mb-1" />
-              <p className="text-xs">지도에서 선택</p>
-            </div>
-          </div>
+          {(isFetching || mutation.isPending) && <p className="text-sm">불러오는 중...</p>}
 
           {/* 검색 결과 */}
           {results.length > 0 && (
@@ -118,7 +164,7 @@ export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
               {results.map(place => (
                 <div
                   key={place.id}
-                  className="flex items-center justify-between rounded-lg border border-border/50 p-3 hover:bg-secondary/40 transition-colors"
+                  className="flex items-center justify-between rounded-lg border border-border/50 p-3 hover:bg-secondary/40"
                 >
                   <div>
                     <p className="text-sm font-medium">{place.name}</p>
@@ -135,7 +181,7 @@ export default function SearchPanel({ onClose, onAddPlace }: SearchPanelProps) {
                   </div>
 
                   <button
-                    onClick={() => onAddPlace(place)}
+                    onClick={() => handleAdd(place)}
                     className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
                   >
                     <Plus className="h-4 w-4" />

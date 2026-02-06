@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom'
 import { useState, useMemo } from 'react'
 import { Calendar, MapPin } from 'lucide-react'
-import type { Place } from '@/types/plan'
+
+import type { Place, Category, CategoryType } from '@/types/plan'
 import { mockPlans } from '../mock/mockPlans'
-import type { Category, CategoryType } from '@/types/plan'
 
 import CategoryCard from '../components/CategoryCard'
 import AddCategoryButton from '../components/AddCategoryButton'
@@ -13,24 +13,32 @@ import { formatKoreanDate } from '@/lib/date'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
-  const plan = useMemo(() => mockPlans.find(p => p.id === planId) ?? mockPlans[0], [planId])
+
+  const numericPlanId = Number(planId)
+
+  const plan = useMemo(
+    () => mockPlans.find(p => p.id === numericPlanId) ?? mockPlans[0],
+    [numericPlanId],
+  )
+
   const [categories, setCategories] = useState<Category[]>(() => plan.categories)
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
+  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null)
   const [activePanel, setActivePanel] = useState<'none' | 'search' | 'trigger'>('none')
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null)
   const [isManageOpen, setIsManageOpen] = useState(false)
 
   const activeCategory = categories.find(c => c.id === activeCategoryId)
-  const toggleCategory = (id: string) => {
+
+  const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
   }
 
-  const openSearchPanel = (categoryId: string) => {
+  const openSearchPanel = (categoryId: number) => {
     setActiveCategoryId(categoryId)
     setActivePanel('search')
   }
 
-  const openTriggerPanel = (categoryId: string) => {
+  const openTriggerPanel = (categoryId: number) => {
     setActiveCategoryId(categoryId)
     setActivePanel('trigger')
   }
@@ -40,10 +48,11 @@ export default function PlanDetailPage() {
     setActiveCategoryId(null)
   }
 
-  const handleSelectRepresentative = (categoryId: string, placeId: string) => {
+  const handleSelectRepresentative = (categoryId: number, placeId: number) => {
     setCategories(prev =>
       prev.map(cat => {
         if (cat.id !== categoryId) return cat
+
         const newRep = cat.candidates.find(p => p.id === placeId)
         if (!newRep) return cat
 
@@ -59,7 +68,7 @@ export default function PlanDetailPage() {
     )
   }
 
-  const handleAddPlace = (categoryId: string, place: Category['candidates'][number]) => {
+  const handleAddPlace = (categoryId: number, place: Place) => {
     setCategories(prev =>
       prev.map(cat =>
         cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, place] } : cat,
@@ -69,6 +78,7 @@ export default function PlanDetailPage() {
 
   const handleChangeCategory = (newType: CategoryType) => {
     if (!activeCategoryId) return
+
     setCategories(prev =>
       prev.map(cat => (cat.id === activeCategoryId ? { ...cat, type: newType } : cat)),
     )
@@ -194,6 +204,9 @@ export default function PlanDetailPage() {
       {/* 패널 */}
       {activePanel === 'search' && activeCategory && (
         <SearchPanel
+          planId={plan.id}
+          categoryId={activeCategory.id}
+          categoryType={activeCategory.type}
           onClose={closePanel}
           onAddPlace={place => handleAddPlace(activeCategory.id, place)}
         />

@@ -1,5 +1,7 @@
 import { http } from '../http'
 
+export type PlaceCategoryType = 'MEAL' | 'CAFE' | 'EXHIBITION' | 'WALK' | 'SHOPPING' | 'REST'
+
 export interface PlaceSearchResponse {
   externalId: string
   name: string
@@ -9,15 +11,7 @@ export interface PlaceSearchResponse {
   isIndoor: boolean
 }
 
-export const searchPlaces = async (category: string) => {
-  const res = await http.get('/api/v1/places/search', {
-    params: { category },
-  })
-
-  return res.data.data as PlaceSearchResponse[]
-}
-
-interface CreateCandidateRequest {
+export interface CreateCandidateRequest {
   planId: number
   categoryId: number
   externalId: string
@@ -28,8 +22,29 @@ interface CreateCandidateRequest {
   isIndoor?: boolean
 }
 
-export const createCandidate = async (body: CreateCandidateRequest) => {
+export interface CreateCandidateResponse {
+  candidateId: number
+  place: {
+    id: number
+    externalId: string
+    name: string
+    address?: string
+    isIndoor?: boolean
+  }
+  createdAt: string
+}
+
+export const createCandidate = async (
+  body: CreateCandidateRequest,
+): Promise<CreateCandidateResponse> => {
   const res = await http.post('/api/v1/places/candidates', body)
+  return res.data.data
+}
+
+export const searchPlaces = async (category: PlaceCategoryType): Promise<PlaceSearchResponse[]> => {
+  const res = await http.get('/api/v1/places/search', {
+    params: { category },
+  })
 
   return res.data.data
 }
