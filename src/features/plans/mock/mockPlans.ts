@@ -42,7 +42,7 @@ export const mockSearchResults: Place[] = [
 
 export const mockPlans: Plan[] = [
   {
-    id: 1,
+    id: 2,
     title: '성수동 데이트',
     date: '2026-01-20',
     region: '서울 성수동',
@@ -50,7 +50,7 @@ export const mockPlans: Plan[] = [
     updatedAt: '2026-01-10',
     categories: [
       {
-        id: 101,
+        id: 2,
         type: 'MEAL',
         order: 1,
         representativePlace: {
