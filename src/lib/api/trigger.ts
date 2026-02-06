@@ -21,7 +21,7 @@ export const createTrigger = async (
     triggerType,
   })
 
-  return res.data.data
+  return res.data.data as { triggerId: number; occurredAt: string }
 }
 
 // 결정
@@ -30,14 +30,24 @@ export const createDecision = async (triggerId: number, decisionType: DecisionTy
     decisionType,
   })
 
-  return res.data.data
+  return res.data.data as {
+    decisionId: number
+    decisionType: DecisionType
+    decidedAt: string
+    needSwitch: boolean
+  }
 }
 
-// 스위치 실행
+// 스위치 실행 (대표 장소 변경 확정)
 export const executeSwitch = async (decisionId: number, toCandidateId: number) => {
   const res = await http.post(`/api/v1/triggers/${decisionId}/switch`, {
     toCandidateId,
   })
 
-  return res.data.data
+  return res.data.data as {
+    switchLogId: number
+    fromCandidateId: number
+    toCandidateId: number
+    switchedAt: string
+  }
 }

@@ -11,6 +11,8 @@ import SearchPanel from '../panels/SearchPanel'
 import TriggerPanel from '../panels/TriggerPanel'
 import { formatKoreanDate } from '@/lib/date'
 import { setRepresentative } from '@/lib/api/place'
+import { createTrigger, createDecision } from '@/lib/api/trigger'
+import type { TriggerType } from '@/types/plan'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -27,6 +29,7 @@ export default function PlanDetailPage() {
   const [activePanel, setActivePanel] = useState<'none' | 'search' | 'trigger'>('none')
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null)
   const [isManageOpen, setIsManageOpen] = useState(false)
+  const [triggerId, setTriggerId] = useState<number | null>(null)
 
   const activeCategory = categories.find(c => c.id === activeCategoryId)
 
@@ -44,7 +47,7 @@ export default function PlanDetailPage() {
     setActivePanel('trigger')
   }
 
-  const closePanel = () => {
+  const closePanel = async () => {
     setActivePanel('none')
     setActiveCategoryId(null)
   }
@@ -115,6 +118,19 @@ export default function PlanDetailPage() {
         }
       }),
     )
+  }
+
+  const handleTrigger = async (categoryId: number, triggerType: TriggerType) => {
+    const res = await createTrigger(plan.id, categoryId, triggerType)
+
+    setTriggerId(res.triggerId)
+  }
+
+  const handleKeep = async () => {
+    if (!triggerId) return
+
+    await createDecision(triggerId, 'KEEP')
+    closePanel()
   }
 
   return (
@@ -229,7 +245,8 @@ export default function PlanDetailPage() {
           candidates={activeCategory.candidates}
           representativePlaceId={activeCategory.representativePlace.id}
           onClose={closePanel}
-          onKeep={closePanel}
+          onTrigger={trigger => handleTrigger(activeCategory.id, trigger)}
+          onKeep={handleKeep}
           onChangeCategory={handleChangeCategory}
           onChangePlace={handleChangePlace}
         />
