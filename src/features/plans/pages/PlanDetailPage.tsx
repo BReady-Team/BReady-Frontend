@@ -10,6 +10,7 @@ import AddCategoryButton from '../components/AddCategoryButton'
 import SearchPanel from '../panels/SearchPanel'
 import TriggerPanel from '../panels/TriggerPanel'
 import { formatKoreanDate } from '@/lib/date'
+import { setRepresentative } from '@/lib/api/place'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -48,24 +49,33 @@ export default function PlanDetailPage() {
     setActiveCategoryId(null)
   }
 
-  const handleSelectRepresentative = (categoryId: number, placeId: number) => {
-    setCategories(prev =>
-      prev.map(cat => {
-        if (cat.id !== categoryId) return cat
+  const handleSelectRepresentative = async (categoryId: number, placeId: number) => {
+    try {
+      // 서버 먼저 저장
+      await setRepresentative(placeId)
 
-        const newRep = cat.candidates.find(p => p.id === placeId)
-        if (!newRep) return cat
+      // 성공하면 UI 변경
+      setCategories(prev =>
+        prev.map(cat => {
+          if (cat.id !== categoryId) return cat
 
-        return {
-          ...cat,
-          representativePlace: { ...newRep, isRepresentative: true },
-          candidates: cat.candidates.map(p => ({
-            ...p,
-            isRepresentative: p.id === placeId,
-          })),
-        }
-      }),
-    )
+          const newRep = cat.candidates.find(p => p.id === placeId)
+          if (!newRep) return cat
+
+          return {
+            ...cat,
+            representativePlace: { ...newRep, isRepresentative: true },
+            candidates: cat.candidates.map(p => ({
+              ...p,
+              isRepresentative: p.id === placeId,
+            })),
+          }
+        }),
+      )
+    } catch (e) {
+      console.error(e)
+      alert('대표 장소 변경 실패')
+    }
   }
 
   const handleAddPlace = (categoryId: number, place: Place) => {
