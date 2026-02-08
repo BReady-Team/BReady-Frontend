@@ -7,9 +7,12 @@ export type TriggerType =
   | 'DISTANCE_TOO_FAR'
 
 export type Place = {
-  id: string
+  id: number
+  externalId?: string
   name: string
   location: string
+  latitude?: number
+  longitude?: number
   rating: number
   isIndoor: boolean
   thumbnailUrl?: string
@@ -17,7 +20,7 @@ export type Place = {
 }
 
 export type Category = {
-  id: string
+  id: number
   type: CategoryType
   order: number
   representativePlace: Place
@@ -25,7 +28,7 @@ export type Category = {
 }
 
 export type Plan = {
-  id: string
+  id: number
   title: string
   date: string
   region: string

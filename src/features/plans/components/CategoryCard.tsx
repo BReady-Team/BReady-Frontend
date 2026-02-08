@@ -9,7 +9,7 @@ interface CategoryCardProps {
   isExpanded: boolean
   isDragging?: boolean
   onToggle: () => void
-  onSelectRepresentative: (placeId: string) => void
+  onSelectRepresentative: (placeId: number) => void
   onTrigger: () => void
   onSearch: () => void
 }

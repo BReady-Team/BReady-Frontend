@@ -21,15 +21,19 @@ const THUMBNAIL = '/seoul_forest.jpg'
 
 export const mockSearchResults: Place[] = [
   {
-    id: 'search-1',
+    id: 10001,
+    externalId: 'mock-10001',
     name: '서울숲',
     location: '서울 성동구',
+    latitude: 37.544,
+    longitude: 127.055,
     rating: 4.8,
     isIndoor: false,
     thumbnailUrl: THUMBNAIL,
   },
   {
-    id: 'search-2',
+    id: 10002,
+    externalId: 'mock-10002',
     name: '서울숲 카페',
     location: '서울 성동구',
     rating: 4.5,
@@ -40,7 +44,7 @@ export const mockSearchResults: Place[] = [
 
 export const mockPlans: Plan[] = [
   {
-    id: 'plan-1',
+    id: 2,
     title: '성수동 데이트',
     date: '2026-01-20',
     region: '서울 성수동',
@@ -48,11 +52,12 @@ export const mockPlans: Plan[] = [
     updatedAt: '2026-01-10',
     categories: [
       {
-        id: 'cat-1',
+        id: 2,
         type: 'MEAL',
         order: 1,
         representativePlace: {
-          id: 'meal-1',
+          id: 5001,
+          externalId: 'mock-meal-rep',
           name: '성수 파스타',
           location: '서울 성동구',
           rating: 4.5,
@@ -60,75 +65,7 @@ export const mockPlans: Plan[] = [
           thumbnailUrl: THUMBNAIL,
           isRepresentative: true,
         },
-        candidates: [
-          {
-            id: 'meal-1',
-            name: '성수 파스타',
-            location: '서울 성동구',
-            rating: 4.5,
-            isIndoor: true,
-            thumbnailUrl: THUMBNAIL,
-            isRepresentative: true,
-          },
-          {
-            id: 'meal-2',
-            name: '뚝섬 한식당',
-            location: '서울 성동구',
-            rating: 4.3,
-            isIndoor: true,
-            thumbnailUrl: THUMBNAIL,
-          },
-        ],
-      },
-      {
-        id: 'cat-2',
-        type: 'WALK',
-        order: 2,
-        representativePlace: {
-          id: 'walk-1',
-          name: '서울숲 산책로',
-          location: '서울 성동구',
-          rating: 4.8,
-          isIndoor: false,
-          thumbnailUrl: THUMBNAIL,
-          isRepresentative: true,
-        },
-        candidates: [
-          {
-            id: 'walk-1',
-            name: '서울숲 산책로',
-            location: '서울 성동구',
-            rating: 4.8,
-            isIndoor: false,
-            thumbnailUrl: THUMBNAIL,
-            isRepresentative: true,
-          },
-        ],
-      },
-      {
-        id: 'cat-3',
-        type: 'CAFE',
-        order: 3,
-        representativePlace: {
-          id: 'cafe-1',
-          name: '서울숲 카페',
-          location: '서울 성동구',
-          rating: 4.6,
-          isIndoor: true,
-          thumbnailUrl: THUMBNAIL,
-          isRepresentative: true,
-        },
-        candidates: [
-          {
-            id: 'cafe-1',
-            name: '서울숲 카페',
-            location: '서울 성동구',
-            rating: 4.6,
-            isIndoor: true,
-            thumbnailUrl: THUMBNAIL,
-            isRepresentative: true,
-          },
-        ],
+        candidates: [],
       },
     ],
   },

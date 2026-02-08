@@ -28,40 +28,42 @@ interface TriggerPanelProps {
   isOpen: boolean
   categoryType: CategoryType
   candidates: Place[]
-  representativePlaceId: string
-
+  representativePlaceId: number
   onClose: () => void
-  onKeep: () => void
+  onTrigger: (trigger: TriggerType) => Promise<void>
+  onKeep: () => Promise<void>
+  onSwitchPlace: (toCandidateId: number) => Promise<void>
   onChangeCategory: (type: CategoryType) => void
-  onChangePlace: (place: Place) => void
 }
 
 type PlaceTab = 'candidates' | 'recommend'
 
-/* 트리거 발생 시 대응 관련 패널 */
 export default function TriggerPanel({
   isOpen,
   categoryType,
   candidates,
   representativePlaceId,
   onClose,
+  onTrigger,
   onKeep,
+  onSwitchPlace,
+
   onChangeCategory,
-  onChangePlace,
 }: TriggerPanelProps) {
   const [step, setStep] = useState<'select' | 'decision' | 'change-category' | 'change-place'>(
     'select',
   )
   const [selectedTrigger, setSelectedTrigger] = useState<TriggerType | null>(null)
   const [placeTab, setPlaceTab] = useState<PlaceTab>('candidates')
+  const [busy, setBusy] = useState(false)
 
   if (!isOpen) return null
 
-  /* 공통 초기화 */
   const resetAndClose = () => {
     setStep('select')
     setSelectedTrigger(null)
     setPlaceTab('candidates')
+    setBusy(false)
     onClose()
   }
 
@@ -101,7 +103,7 @@ export default function TriggerPanel({
         </header>
 
         <div className="p-6 space-y-6">
-          {/* 트리거 선택 */}
+          {/* 트리거 선택 → createTrigger 호출 */}
           {step === 'select' && (
             <>
               <p className="text-sm text-muted-foreground">어떤 상황이 발생했나요?</p>
@@ -112,11 +114,18 @@ export default function TriggerPanel({
                   return (
                     <button
                       key={trigger}
-                      onClick={() => {
-                        setSelectedTrigger(trigger)
-                        setStep('decision')
+                      disabled={busy}
+                      onClick={async () => {
+                        try {
+                          setBusy(true)
+                          await onTrigger(trigger)
+                          setSelectedTrigger(trigger)
+                          setStep('decision')
+                        } finally {
+                          setBusy(false)
+                        }
                       }}
-                      className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-4 text-left hover:bg-secondary/50 transition-colors"
+                      className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-4 text-left hover:bg-secondary/50 transition-colors disabled:opacity-60"
                     >
                       <Icon className="h-5 w-5 text-muted-foreground" />
                       <span className="text-sm">{triggerLabels[trigger]}</span>
@@ -142,13 +151,19 @@ export default function TriggerPanel({
 
               <p className="text-sm text-muted-foreground">어떻게 하시겠어요?</p>
 
-              {/* 유지 */}
+              {/* 그대로 유지 → KEEP 흐름 */}
               <button
-                onClick={() => {
-                  onKeep()
-                  resetAndClose()
+                disabled={busy}
+                onClick={async () => {
+                  try {
+                    setBusy(true)
+                    await onKeep()
+                    resetAndClose()
+                  } finally {
+                    setBusy(false)
+                  }
                 }}
-                className="flex w-full items-center gap-3 rounded-xl border border-border/50 p-4 hover:bg-secondary/50"
+                className="flex w-full items-center gap-3 rounded-xl border border-border/50 p-4 hover:bg-secondary/50 disabled:opacity-60"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
                   <Check className="h-5 w-5" />
@@ -159,10 +174,11 @@ export default function TriggerPanel({
                 </div>
               </button>
 
-              {/* 카테고리 변경 */}
+              {/* 카테고리 변경 (지금은 UI만) */}
               <button
+                disabled={busy}
                 onClick={() => setStep('change-category')}
-                className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10"
+                className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 disabled:opacity-60"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
                   <ArrowRightLeft className="h-5 w-5 text-primary" />
@@ -173,10 +189,11 @@ export default function TriggerPanel({
                 </div>
               </button>
 
-              {/* 장소 변경 */}
+              {/* 장소 변경 → SWITCH 흐름 */}
               <button
+                disabled={busy}
                 onClick={() => setStep('change-place')}
-                className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10"
+                className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 disabled:opacity-60"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
                   <RefreshCw className="h-5 w-5 text-primary" />
@@ -189,7 +206,7 @@ export default function TriggerPanel({
             </>
           )}
 
-          {/* 카테고리 변경 관련 */}
+          {/* 카테고리 변경 */}
           {step === 'change-category' && (
             <>
               <p className="text-sm text-muted-foreground">어떤 활동으로 변경할까요?</p>
@@ -200,11 +217,12 @@ export default function TriggerPanel({
                   .map(type => (
                     <button
                       key={type}
+                      disabled={busy}
                       onClick={() => {
                         onChangeCategory(type)
                         resetAndClose()
                       }}
-                      className="rounded-xl border border-border/50 p-4 hover:bg-secondary/50"
+                      className="rounded-xl border border-border/50 p-4 hover:bg-secondary/50 disabled:opacity-60"
                     >
                       <p className="text-sm font-medium">{categoryLabels[type].label}</p>
                     </button>
@@ -213,10 +231,9 @@ export default function TriggerPanel({
             </>
           )}
 
-          {/* 장소 변경 관련 */}
+          {/* 후보 선택 → SWITCH 확정 */}
           {step === 'change-place' && (
             <>
-              {/* 탭 */}
               <div className="flex gap-1 rounded-lg bg-secondary/50 p-1">
                 {(['candidates', 'recommend'] as PlaceTab[]).map(tab => (
                   <button
@@ -232,18 +249,23 @@ export default function TriggerPanel({
                 ))}
               </div>
 
-              {/* 후보 장소 */}
               {placeTab === 'candidates' &&
                 candidates
                   .filter(p => p.id !== representativePlaceId)
                   .map(place => (
                     <button
                       key={place.id}
-                      onClick={() => {
-                        onChangePlace(place)
-                        resetAndClose()
+                      disabled={busy}
+                      onClick={async () => {
+                        try {
+                          setBusy(true)
+                          await onSwitchPlace(place.id)
+                          resetAndClose()
+                        } finally {
+                          setBusy(false)
+                        }
                       }}
-                      className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50"
+                      className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
                     >
                       <img
                         src={place.thumbnailUrl ?? '/seoul_forest.jpg'}
@@ -256,16 +278,15 @@ export default function TriggerPanel({
                     </button>
                   ))}
 
-              {/* 추천 */}
               {placeTab === 'recommend' &&
                 mockSearchResults.map(place => (
                   <button
                     key={place.id}
+                    disabled={busy}
                     onClick={() => {
-                      onChangePlace(place)
                       resetAndClose()
                     }}
-                    className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50"
+                    className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
                   >
                     <img
                       src={place.thumbnailUrl ?? '/seoul_forest.jpg'}

@@ -1,16 +1,16 @@
 import type { TriggerType } from '@/types/plan'
 
 export interface SwitchLog {
-  id: string
-  planId: string
-  categoryId: string
+  id: number
+  planId: number
+  categoryId: number
   triggerType: TriggerType
   decision: 'KEEP' | 'SWITCH'
   createdAt: string
 }
 
 export interface PlanStats {
-  planId: string
+  planId: number
   totalSwitches: number
   triggerCounts: Record<TriggerType, number>
   categoryChanges: number

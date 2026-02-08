@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 
 interface Props {
   logs: SwitchLog[]
-  planTitleMap: Map<string, string>
+  planTitleMap: Map<number, string>
 }
 
 export default function RecentActivity({ logs, planTitleMap }: Props) {

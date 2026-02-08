@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom'
 import { useState, useMemo } from 'react'
 import { Calendar, MapPin } from 'lucide-react'
-import type { Place } from '@/types/plan'
+
+import type { Place, Category, CategoryType, TriggerType } from '@/types/plan'
 import { mockPlans } from '../mock/mockPlans'
-import type { Category, CategoryType } from '@/types/plan'
 
 import CategoryCard from '../components/CategoryCard'
 import AddCategoryButton from '../components/AddCategoryButton'
@@ -11,27 +11,39 @@ import SearchPanel from '../panels/SearchPanel'
 import TriggerPanel from '../panels/TriggerPanel'
 import { formatKoreanDate } from '@/lib/date'
 
+import { setRepresentative } from '@/lib/api/place'
+import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
+
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
-  const plan = useMemo(() => mockPlans.find(p => p.id === planId) ?? mockPlans[0], [planId])
+  const numericPlanId = Number(planId)
+
+  const plan = useMemo(
+    () => mockPlans.find(p => p.id === numericPlanId) ?? mockPlans[0],
+    [numericPlanId],
+  )
+
   const [categories, setCategories] = useState<Category[]>(() => plan.categories)
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
+  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null)
   const [activePanel, setActivePanel] = useState<'none' | 'search' | 'trigger'>('none')
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null)
   const [isManageOpen, setIsManageOpen] = useState(false)
+  const [triggerId, setTriggerId] = useState<number | null>(null)
 
   const activeCategory = categories.find(c => c.id === activeCategoryId)
-  const toggleCategory = (id: string) => {
+
+  const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
   }
 
-  const openSearchPanel = (categoryId: string) => {
+  const openSearchPanel = (categoryId: number) => {
     setActiveCategoryId(categoryId)
     setActivePanel('search')
   }
 
-  const openTriggerPanel = (categoryId: string) => {
+  const openTriggerPanel = (categoryId: number) => {
     setActiveCategoryId(categoryId)
+    setTriggerId(null) // 패널 열 때마다 초기화
     setActivePanel('trigger')
   }
 
@@ -40,26 +52,34 @@ export default function PlanDetailPage() {
     setActiveCategoryId(null)
   }
 
-  const handleSelectRepresentative = (categoryId: string, placeId: string) => {
-    setCategories(prev =>
-      prev.map(cat => {
-        if (cat.id !== categoryId) return cat
-        const newRep = cat.candidates.find(p => p.id === placeId)
-        if (!newRep) return cat
+  const handleSelectRepresentative = async (categoryId: number, placeId: number) => {
+    try {
+      await setRepresentative(placeId)
 
-        return {
-          ...cat,
-          representativePlace: { ...newRep, isRepresentative: true },
-          candidates: cat.candidates.map(p => ({
-            ...p,
-            isRepresentative: p.id === placeId,
-          })),
-        }
-      }),
-    )
+      setCategories(prev =>
+        prev.map(cat => {
+          if (cat.id !== categoryId) return cat
+
+          const newRep = cat.candidates.find(p => p.id === placeId)
+          if (!newRep) return cat
+
+          return {
+            ...cat,
+            representativePlace: { ...newRep, isRepresentative: true },
+            candidates: cat.candidates.map(p => ({
+              ...p,
+              isRepresentative: p.id === placeId,
+            })),
+          }
+        }),
+      )
+    } catch (e) {
+      console.error(e)
+      alert('대표 장소 변경 실패')
+    }
   }
 
-  const handleAddPlace = (categoryId: string, place: Category['candidates'][number]) => {
+  const handleAddPlace = (categoryId: number, place: Place) => {
     setCategories(prev =>
       prev.map(cat =>
         cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, place] } : cat,
@@ -69,43 +89,75 @@ export default function PlanDetailPage() {
 
   const handleChangeCategory = (newType: CategoryType) => {
     if (!activeCategoryId) return
+
     setCategories(prev =>
       prev.map(cat => (cat.id === activeCategoryId ? { ...cat, type: newType } : cat)),
     )
   }
 
-  const handleChangePlace = (place: Place) => {
-    if (!activeCategoryId) return
+  // 트리거 발생
+  const handleTrigger = async (triggerType: TriggerType) => {
+    if (!activeCategory) return
 
+    const res = await createTrigger(plan.id, activeCategory.id, triggerType)
+    setTriggerId(res.triggerId)
+  }
+
+  // KEEP 결정
+  const handleKeep = async () => {
+    if (!triggerId) {
+      alert('트리거가 먼저 생성되어야 합니다. (트리거 선택을 다시 해주세요)')
+      return
+    }
+
+    await createDecision(triggerId, 'KEEP')
+    closePanel()
+  }
+
+  // SWITCH 확정
+  const handleSwitchPlace = async (toCandidateId: number) => {
+    if (!activeCategory) return
+
+    if (!triggerId) {
+      alert('트리거가 먼저 생성되어야 합니다. (트리거 선택을 다시 해주세요)')
+      return
+    }
+
+    // SWITCH 결정 생성
+    const decisionRes = await createDecision(triggerId, 'SWITCH')
+
+    // 실제 대표 후보 변경 확정
+    await executeSwitch(decisionRes.decisionId, toCandidateId)
+
+    // UI 대표 후보 변경 (서버에서 대표 바꿨으니 프론트도 동기화)
     setCategories(prev =>
       prev.map(cat => {
-        if (cat.id !== activeCategoryId) return cat
+        if (cat.id !== activeCategory.id) return cat
 
-        const exists = cat.candidates.some(p => p.id === place.id)
-
-        const updatedCandidates = exists ? cat.candidates : [...cat.candidates, place]
+        const newRep = cat.candidates.find(p => p.id === toCandidateId)
+        if (!newRep) return cat
 
         return {
           ...cat,
-          candidates: updatedCandidates.map(p => ({
+          representativePlace: { ...newRep, isRepresentative: true },
+          candidates: cat.candidates.map(p => ({
             ...p,
-            isRepresentative: p.id === place.id,
+            isRepresentative: p.id === toCandidateId,
           })),
-          representativePlace: { ...place, isRepresentative: true },
         }
       }),
     )
+
+    closePanel()
   }
 
   return (
     <div className="relative min-h-screen">
-      {/* 메인 콘텐츠 부분 */}
       <div
         className={`mx-auto max-w-3xl px-6 py-12 transition-all ${
           activePanel !== 'none' ? 'mr-[420px]' : ''
         }`}
       >
-        {/* 헤더 */}
         <header className="mb-10 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-semibold">{plan.title}</h1>
@@ -123,7 +175,6 @@ export default function PlanDetailPage() {
             </div>
           </div>
 
-          {/* 관리 버튼 */}
           <div className="relative">
             <button
               onClick={() => setIsManageOpen(prev => !prev)}
@@ -173,7 +224,6 @@ export default function PlanDetailPage() {
           </div>
         </header>
 
-        {/* 카테고리 */}
         <div className="space-y-4">
           {categories.map(category => (
             <CategoryCard
@@ -191,9 +241,11 @@ export default function PlanDetailPage() {
         </div>
       </div>
 
-      {/* 패널 */}
       {activePanel === 'search' && activeCategory && (
         <SearchPanel
+          planId={plan.id}
+          categoryId={activeCategory.id}
+          categoryType={activeCategory.type}
           onClose={closePanel}
           onAddPlace={place => handleAddPlace(activeCategory.id, place)}
         />
@@ -206,9 +258,10 @@ export default function PlanDetailPage() {
           candidates={activeCategory.candidates}
           representativePlaceId={activeCategory.representativePlace.id}
           onClose={closePanel}
-          onKeep={closePanel}
+          onTrigger={handleTrigger}
+          onKeep={handleKeep}
+          onSwitchPlace={handleSwitchPlace}
           onChangeCategory={handleChangeCategory}
-          onChangePlace={handleChangePlace}
         />
       )}
     </div>
