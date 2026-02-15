@@ -14,6 +14,8 @@ import { formatKoreanDate } from '@/lib/date'
 
 import { setRepresentative } from '@/lib/api/place'
 import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
+import { deletePlan } from '../api'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -30,6 +32,8 @@ export default function PlanDetailPage() {
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null)
   const [isManageOpen, setIsManageOpen] = useState(false)
   const [triggerId, setTriggerId] = useState<number | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const activeCategory = categories.find(c => c.id === activeCategoryId)
   const navigate = useNavigate()
@@ -214,7 +218,7 @@ export default function PlanDetailPage() {
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setIsManageOpen(false)
-                      console.log('삭제')
+                      setDeleteOpen(true)
                     }}
                   >
                     🗑️ 삭제
@@ -265,6 +269,30 @@ export default function PlanDetailPage() {
           onChangeCategory={handleChangeCategory}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="플랜을 삭제할까요?"
+        description="삭제하면 복구할 수 없습니다."
+        confirmText={deleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!deleting) setDeleteOpen(false)
+        }}
+        onConfirm={async () => {
+          try {
+            setDeleting(true)
+            await deletePlan(plan.id)
+            navigate('/plans')
+          } catch {
+            alert('삭제에 실패했습니다.')
+          } finally {
+            setDeleting(false)
+            setDeleteOpen(false)
+          }
+        }}
+      />
     </div>
   )
 }
