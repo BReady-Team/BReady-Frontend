@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin } from 'lucide-react'
 
 import type { Place, Category, CategoryType, TriggerType } from '@/types/plan'
@@ -31,7 +32,7 @@ export default function PlanDetailPage() {
   const [triggerId, setTriggerId] = useState<number | null>(null)
 
   const activeCategory = categories.find(c => c.id === activeCategoryId)
-
+  const navigate = useNavigate()
   const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
   }
@@ -191,7 +192,7 @@ export default function PlanDetailPage() {
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
                     onClick={() => {
                       setIsManageOpen(false)
-                      console.log('수정')
+                      navigate(`/plans/${plan.id}/edit`)
                     }}
                   >
                     ✏️ 수정
