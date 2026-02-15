@@ -43,3 +43,9 @@ export async function deletePlanCategory(planId: number, planCategoryId: number)
   const res = await http.delete(`/api/v1/plans/${planId}/categories/${planCategoryId}`)
   return res.data.data
 }
+
+// 장소 후보 삭제
+export async function deleteCandidate(candidateId: number) {
+  const res = await http.delete(`/api/v1/places/candidates/${candidateId}`)
+  return res.data.data
+}
