@@ -1,4 +1,4 @@
-import { ChevronDown, GripVertical, Plus, Zap } from 'lucide-react'
+import { ChevronDown, GripVertical, Plus, Zap, Trash2 } from 'lucide-react'
 import type { Category } from '@/types/plan'
 import PlaceItem from './PlaceItem'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,7 @@ interface CategoryCardProps {
   onSelectRepresentative: (placeId: number) => void
   onTrigger: () => void
   onSearch: () => void
+  onDelete: () => void
 }
 
 export default function CategoryCard({
@@ -22,6 +23,7 @@ export default function CategoryCard({
   onSelectRepresentative,
   onTrigger,
   onSearch,
+  onDelete,
 }: CategoryCardProps) {
   const { type, representativePlace, candidates } = category
   const { label, Icon } = categoryMeta[type]
@@ -48,12 +50,25 @@ export default function CategoryCard({
           <span className="ml-2 text-xs text-muted-foreground">후보 {candidates.length}개</span>
         </div>
 
-        <ChevronDown
-          className={cn(
-            'h-5 w-5 text-muted-foreground transition-transform',
-            isExpanded && 'rotate-180',
-          )}
-        />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation()
+              onDelete()
+            }}
+            className="p-1 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+
+          <ChevronDown
+            className={cn(
+              'h-5 w-5 text-muted-foreground transition-transform',
+              isExpanded && 'rotate-180',
+            )}
+          />
+        </div>
       </div>
 
       {/* 대표 장소 */}

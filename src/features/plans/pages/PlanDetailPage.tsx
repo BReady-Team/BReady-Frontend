@@ -14,7 +14,7 @@ import { formatKoreanDate } from '@/lib/date'
 
 import { setRepresentative } from '@/lib/api/place'
 import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
-import { deletePlan } from '../api'
+import { deletePlan, deletePlanCategory } from '../api'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 export default function PlanDetailPage() {
@@ -34,6 +34,8 @@ export default function PlanDetailPage() {
   const [triggerId, setTriggerId] = useState<number | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null)
+  const [categoryDeleting, setCategoryDeleting] = useState(false)
 
   const activeCategory = categories.find(c => c.id === activeCategoryId)
   const navigate = useNavigate()
@@ -239,6 +241,7 @@ export default function PlanDetailPage() {
               onSelectRepresentative={placeId => handleSelectRepresentative(category.id, placeId)}
               onSearch={() => openSearchPanel(category.id)}
               onTrigger={() => openTriggerPanel(category.id)}
+              onDelete={() => setDeleteCategoryId(category.id)}
             />
           ))}
 
@@ -290,6 +293,34 @@ export default function PlanDetailPage() {
           } finally {
             setDeleting(false)
             setDeleteOpen(false)
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteCategoryId !== null}
+        title="카테고리를 삭제할까요?"
+        description="해당 카테고리와 후보 장소가 모두 삭제됩니다."
+        confirmText={categoryDeleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!categoryDeleting) setDeleteCategoryId(null)
+        }}
+        onConfirm={async () => {
+          if (deleteCategoryId === null) return
+
+          try {
+            setCategoryDeleting(true)
+
+            await deletePlanCategory(plan.id, deleteCategoryId)
+
+            setCategories(prev => prev.filter(cat => cat.id !== deleteCategoryId))
+          } catch {
+            alert('카테고리 삭제에 실패했습니다.')
+          } finally {
+            setCategoryDeleting(false)
+            setDeleteCategoryId(null)
           }
         }}
       />
