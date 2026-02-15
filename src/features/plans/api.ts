@@ -37,3 +37,9 @@ export async function updatePlan(
 export async function deletePlan(planId: number) {
   await http.delete(`/api/v1/plans/${planId}`)
 }
+
+// 카테고리 삭제
+export async function deletePlanCategory(planId: number, planCategoryId: number) {
+  const res = await http.delete(`/api/v1/plans/${planId}/categories/${planCategoryId}`)
+  return res.data.data
+}
