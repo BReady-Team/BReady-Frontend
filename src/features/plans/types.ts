@@ -13,3 +13,38 @@ export interface PlanSummaryDTO {
   region: string
   categories: PlanCategorySummary[]
 }
+
+export interface PlanDetailResponse {
+  plan: {
+    planId: number
+    title: string
+    planDate: string
+    region: string
+    status: string
+    createdAt: string
+    updatedAt: string
+  }
+  categories: CategoryResponse[]
+}
+
+export interface CategoryResponse {
+  categoryId: number
+  categoryType: string
+  order: number
+  representativeCandidateId: number
+  candidates: CandidateResponse[]
+}
+
+export interface CandidateResponse {
+  candidateId: number
+  place: {
+    id: number
+    externalId?: string
+    name: string
+    address: string
+    latitude: number
+    longitude: number
+    isIndoor: boolean
+  }
+  isRepresentative: boolean
+}

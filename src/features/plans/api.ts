@@ -1,6 +1,6 @@
 import { http } from '@/lib/http'
 import type { PlanSummaryDTO } from './types'
-import type { Plan } from '@/types/plan'
+import type { PlanDetailResponse } from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
 export async function fetchPlanSummaries(): Promise<PlanSummaryDTO[]> {
@@ -9,7 +9,7 @@ export async function fetchPlanSummaries(): Promise<PlanSummaryDTO[]> {
 }
 
 //  플랜 상세 조회 GET /api/v1/plans/{planId}
-export async function fetchPlanDetail(planId: number): Promise<Plan> {
+export async function fetchPlanDetail(planId: number): Promise<PlanDetailResponse> {
   const res = await http.get(`/api/v1/plans/${planId}`)
   return res.data.data
 }
