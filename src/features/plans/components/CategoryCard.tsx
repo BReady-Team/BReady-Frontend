@@ -13,6 +13,7 @@ interface CategoryCardProps {
   onTrigger: () => void
   onSearch: () => void
   onDelete: () => void
+  onDeleteCandidate: (candidateId: number) => void
 }
 
 export default function CategoryCard({
@@ -24,6 +25,7 @@ export default function CategoryCard({
   onTrigger,
   onSearch,
   onDelete,
+  onDeleteCandidate,
 }: CategoryCardProps) {
   const { type, representativePlace, candidates } = category
   const { label, Icon } = categoryMeta[type]
@@ -73,7 +75,12 @@ export default function CategoryCard({
 
       {/* 대표 장소 */}
       <div className="border-t border-border/30 p-4">
-        <PlaceItem place={representativePlace} isRepresentative onSelect={() => {}} />
+        <PlaceItem
+          place={representativePlace}
+          isRepresentative
+          onSelect={() => {}}
+          onDelete={() => onDeleteCandidate(representativePlace.id)}
+        />
 
         <div className="mt-4">
           <button
@@ -115,6 +122,7 @@ export default function CategoryCard({
                 place={place}
                 isRepresentative={place.id === representativePlace.id}
                 onSelect={() => onSelectRepresentative(place.id)}
+                onDelete={() => onDeleteCandidate(place.id)}
               />
             ))
           ) : (

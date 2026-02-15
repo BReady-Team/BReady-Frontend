@@ -14,7 +14,7 @@ import { formatKoreanDate } from '@/lib/date'
 
 import { setRepresentative } from '@/lib/api/place'
 import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
-import { deletePlan, deletePlanCategory } from '../api'
+import { deletePlan, deletePlanCategory, deleteCandidate } from '../api'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 export default function PlanDetailPage() {
@@ -36,7 +36,8 @@ export default function PlanDetailPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null)
   const [categoryDeleting, setCategoryDeleting] = useState(false)
-
+  const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null)
+  const [candidateDeleting, setCandidateDeleting] = useState(false)
   const activeCategory = categories.find(c => c.id === activeCategoryId)
   const navigate = useNavigate()
   const toggleCategory = (id: number) => {
@@ -242,6 +243,7 @@ export default function PlanDetailPage() {
               onSearch={() => openSearchPanel(category.id)}
               onTrigger={() => openTriggerPanel(category.id)}
               onDelete={() => setDeleteCategoryId(category.id)}
+              onDeleteCandidate={candidateId => setDeleteCandidateId(candidateId)}
             />
           ))}
 
@@ -321,6 +323,48 @@ export default function PlanDetailPage() {
           } finally {
             setCategoryDeleting(false)
             setDeleteCategoryId(null)
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteCandidateId !== null}
+        title="후보 장소를 삭제할까요?"
+        description="대표 장소인 경우 다음 후보가 자동으로 대표가 됩니다."
+        confirmText={candidateDeleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!candidateDeleting) setDeleteCandidateId(null)
+        }}
+        onConfirm={async () => {
+          if (deleteCandidateId === null) return
+
+          try {
+            setCandidateDeleting(true)
+
+            await deleteCandidate(deleteCandidateId)
+
+            setCategories(prev =>
+              prev.map(cat => {
+                const filtered = cat.candidates.filter(p => p.id !== deleteCandidateId)
+
+                if (filtered.length === 0) return cat
+
+                const wasRepresentative = cat.representativePlace.id === deleteCandidateId
+
+                return {
+                  ...cat,
+                  candidates: filtered,
+                  representativePlace: wasRepresentative ? filtered[0] : cat.representativePlace,
+                }
+              }),
+            )
+          } catch {
+            alert('후보 삭제에 실패했습니다.')
+          } finally {
+            setCandidateDeleting(false)
+            setDeleteCandidateId(null)
           }
         }}
       />
