@@ -5,7 +5,6 @@ import type { MyPageDTO } from '../types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import {
   CalendarDays,
@@ -17,14 +16,9 @@ import {
   MapPin,
   Pencil,
   Repeat2,
-  Settings,
-  Shield,
-  Trash2,
   User,
   X,
 } from 'lucide-react'
-
-type TabKey = 'overview' | 'settings'
 
 function formatKoreanDate(isoOrYmd: string) {
   const d = new Date(isoOrYmd.includes('T') ? isoOrYmd : `${isoOrYmd}T00:00:00`)
@@ -66,26 +60,9 @@ function StatCard(props: { icon: JSX.Element; value: number; label: string }) {
   )
 }
 
-function SettingsRow(props: { icon: JSX.Element; title: string; onClick?: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      className="flex w-full items-center justify-between rounded-2xl border border-border/40 bg-card/40 px-6 py-5 shadow-sm"
-    >
-      <div className="flex items-center gap-3">
-        <span className="text-muted-foreground">{props.icon}</span>
-        <span className="text-sm font-medium">{props.title}</span>
-      </div>
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-    </button>
-  )
-}
-
 export default function MyPage() {
   const navigate = useNavigate()
   const logout = useAuthStore(s => s.logout)
-  const [tab, setTab] = useState<TabKey>('overview')
 
   const [data, setData] = useState<MyPageDTO | null>(null)
   const [loading, setLoading] = useState(true)
@@ -311,183 +288,136 @@ export default function MyPage() {
         </div>
       </section>
 
-      {/* Tabs */}
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          type="button"
-          onClick={() => setTab('overview')}
-          className={cn(
-            'rounded-xl border border-border/40 py-3 font-medium transition-colors duration-200',
-            tab === 'overview' ? 'bg-card/60' : 'bg-card/30 text-muted-foreground hover:bg-card/40',
+      {/* Bio */}
+      <section className="rounded-2xl border border-border/40 bg-card/50 p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div className="w-full space-y-2">
+            <p className="text-xs text-muted-foreground">소개</p>
+
+            {loading ? (
+              <p className="text-sm text-muted-foreground">불러오는 중...</p>
+            ) : isEditingBio ? (
+              <div className="space-y-3">
+                <textarea
+                  value={bioDraft}
+                  onChange={e => setBioDraft(e.target.value)}
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-border/40 bg-background/30 p-3 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+                  aria-label="소개 입력"
+                />
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={cancelBioEdit}
+                    className="transition-colors hover:bg-white/10"
+                  >
+                    취소
+                  </Button>
+                  <Button type="button" onClick={saveBioEdit}>
+                    저장
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm">{data?.profile.bio ?? ''}</p>
+            )}
+          </div>
+
+          {!isEditingBio && (
+            <button
+              type="button"
+              onClick={startBioEdit}
+              className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors duration-200 hover:bg-white/5 hover:text-foreground"
+              aria-label="소개 수정"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              <span className="whitespace-nowrap">수정</span>
+            </button>
           )}
-        >
-          개요
-        </button>
+        </div>
+      </section>
 
-        <button
-          type="button"
-          onClick={() => setTab('settings')}
-          className={cn(
-            'rounded-xl border border-border/40 py-3 font-medium transition-colors duration-200',
-            tab === 'settings' ? 'bg-card/60' : 'bg-card/30 text-muted-foreground hover:bg-card/40',
-          )}
-        >
-          설정
-        </button>
-      </div>
+      {/* Stats */}
+      <section className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />}
+          value={data?.stats.totalPlans ?? 0}
+          label="총 플랜"
+        />
+        <StatCard
+          icon={<Repeat2 className="h-5 w-5" aria-hidden="true" />}
+          value={data?.stats.totalSwitches ?? 0}
+          label="총 전환"
+        />
+        <StatCard
+          icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
+          value={data?.stats.totalSwitchLogs ?? 0}
+          label="전환 기록"
+        />
+      </section>
 
-      {tab === 'overview' ? (
-        <>
-          {/* Bio */}
-          <section className="rounded-2xl border border-border/40 bg-card/50 p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-              <div className="w-full space-y-2">
-                <p className="text-xs text-muted-foreground">소개</p>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">최근 플랜</h2>
 
-                {loading ? (
-                  <p className="text-sm text-muted-foreground">불러오는 중...</p>
-                ) : isEditingBio ? (
-                  <div className="space-y-3">
-                    <textarea
-                      value={bioDraft}
-                      onChange={e => setBioDraft(e.target.value)}
-                      rows={3}
-                      className="w-full resize-none rounded-xl border border-border/40 bg-background/30 p-3 text-sm outline-none focus:ring-1 focus:ring-primary/40"
-                      aria-label="소개 입력"
-                    />
+          <Link
+            to="/plans"
+            className="text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
+          >
+            전체 보기
+          </Link>
+        </div>
 
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={cancelBioEdit}
-                        className="transition-colors hover:bg-white/10"
-                      >
-                        취소
-                      </Button>
-                      <Button type="button" onClick={saveBioEdit}>
-                        저장
-                      </Button>
+        <div className="space-y-4">
+          {loading ? (
+            <LoadingBox />
+          ) : error ? (
+            <ErrorBox text={error} />
+          ) : (data?.recentPlans ?? []).length === 0 ? (
+            <div className="rounded-2xl border border-border/40 bg-card/50 p-6 text-sm text-muted-foreground">
+              최근 플랜이 없습니다.
+            </div>
+          ) : (
+            (data?.recentPlans ?? []).map(p => (
+              <Link
+                key={p.id}
+                to={`/plans/${p.id}`}
+                className="group block w-full rounded-2xl border border-border/40 bg-card p-6 text-left shadow-sm transition-colors duration-200 hover:border-primary/60 hover:bg-secondary/10"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
+                      {p.title}
+                    </h3>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                        {formatKoreanDate(p.date)}
+                      </span>
+                      <span className="inline-flex items-center gap-2">
+                        <MapPin className="h-4 w-4" aria-hidden="true" />
+                        {p.region}
+                      </span>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-sm">{data?.profile.bio ?? ''}</p>
-                )}
-              </div>
 
-              {!isEditingBio && (
-                <button
-                  type="button"
-                  onClick={startBioEdit}
-                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors duration-200 hover:bg-white/5 hover:text-foreground"
-                  aria-label="소개 수정"
-                >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                  <span className="whitespace-nowrap">수정</span>
-                </button>
-              )}
-            </div>
-          </section>
-
-          {/* Stats */}
-          <section className="grid gap-4 md:grid-cols-3">
-            <StatCard
-              icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />}
-              value={data?.stats.totalPlans ?? 0}
-              label="총 플랜"
-            />
-            <StatCard
-              icon={<Repeat2 className="h-5 w-5" aria-hidden="true" />}
-              value={data?.stats.totalSwitches ?? 0}
-              label="총 전환"
-            />
-            <StatCard
-              icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
-              value={data?.stats.totalSwitchLogs ?? 0}
-              label="전환 기록"
-            />
-          </section>
-
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">최근 플랜</h2>
-
-              <Link
-                to="/plans"
-                className="text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
-              >
-                전체 보기
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {loading ? (
-                <LoadingBox />
-              ) : error ? (
-                <ErrorBox text={error} />
-              ) : (data?.recentPlans ?? []).length === 0 ? (
-                <div className="rounded-2xl border border-border/40 bg-card/50 p-6 text-sm text-muted-foreground">
-                  최근 플랜이 없습니다.
+                  <ChevronRight
+                    className="h-5 w-5 text-muted-foreground transition-colors duration-200 group-hover:text-primary"
+                    aria-hidden="true"
+                  />
                 </div>
-              ) : (
-                (data?.recentPlans ?? []).map(p => (
-                  <Link
-                    key={p.id}
-                    to={`/plans/${p.id}`}
-                    className="group block w-full rounded-2xl border border-border/40 bg-card p-6 text-left shadow-sm transition-colors duration-200 hover:border-primary/60 hover:bg-secondary/10"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
-                          {p.title}
-                        </h3>
+              </Link>
+            ))
+          )}
+        </div>
+      </section>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                          <span className="inline-flex items-center gap-2">
-                            <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                            {formatKoreanDate(p.date)}
-                          </span>
-                          <span className="inline-flex items-center gap-2">
-                            <MapPin className="h-4 w-4" aria-hidden="true" />
-                            {p.region}
-                          </span>
-                        </div>
-                      </div>
-
-                      <ChevronRight
-                        className="h-5 w-5 text-muted-foreground transition-colors duration-200 group-hover:text-primary"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </section>
-
-          <footer className="rounded-2xl border border-border/40 bg-card/30 py-5 text-center text-xs text-muted-foreground">
-            {loading ? '—' : joinedText}
-          </footer>
-        </>
-      ) : (
-        <section className="space-y-3">
-          <SettingsRow
-            icon={<Shield className="h-5 w-5" aria-hidden="true" />}
-            title="개인정보 및 보안"
-            onClick={() => {}}
-          />
-          <SettingsRow
-            icon={<Settings className="h-5 w-5" aria-hidden="true" />}
-            title="설정"
-            onClick={() => {}}
-          />
-          <SettingsRow
-            icon={<Trash2 className="h-5 w-5" aria-hidden="true" />}
-            title="회원 탈퇴"
-            onClick={() => {}}
-          />
-        </section>
-      )}
+      <footer className="rounded-2xl border border-border/40 bg-card/30 py-5 text-center text-xs text-muted-foreground">
+        {loading ? '—' : joinedText}
+      </footer>
     </main>
   )
 }
