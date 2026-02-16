@@ -68,7 +68,7 @@ export default function PlanDetailPage() {
 
       if (!targetCandidate) return
 
-      await setRepresentative(targetCandidate.place.id)
+      await setRepresentative(candidateId)
 
       setCategories(prev =>
         prev.map(cat => {
