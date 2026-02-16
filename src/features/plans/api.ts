@@ -1,6 +1,5 @@
 import { http } from '@/lib/http'
-import type { PlanSummaryDTO } from './types'
-import type { PlanDetailResponse } from './types'
+import type { PlanSummaryDTO, PlanDetailResponse } from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
 export async function fetchPlanSummaries(): Promise<PlanSummaryDTO[]> {

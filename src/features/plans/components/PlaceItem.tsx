@@ -42,6 +42,7 @@ export default function PlaceItem({ place, isRepresentative, onSelect, onDelete 
 
           <button
             type="button"
+            aria-label={`${place.name} 삭제`}
             onClick={e => {
               e.stopPropagation()
               onDelete()

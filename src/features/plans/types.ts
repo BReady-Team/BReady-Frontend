@@ -29,7 +29,7 @@ export interface PlanDetailResponse {
 
 export interface CategoryResponse {
   categoryId: number
-  categoryType: string
+  categoryType: CategoryType
   order: number
   representativeCandidateId: number
   candidates: CandidateResponse[]

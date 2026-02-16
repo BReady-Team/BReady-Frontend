@@ -48,10 +48,10 @@ export default function PlanCreatePage() {
         setTitle(detail.plan.title)
         setRegion(detail.plan.region)
 
-        const dt = new Date(detail.plan.planDate)
-        setYear(String(dt.getFullYear()))
-        setMonth(String(dt.getMonth() + 1))
-        setDay(String(dt.getDate()))
+        const [y, m, d] = detail.plan.planDate.split('-')
+        setYear(y)
+        setMonth(String(Number(m)))
+        setDay(String(Number(d)))
       } catch {
         setError('플랜 정보를 불러오지 못했습니다.')
       } finally {
@@ -68,7 +68,7 @@ export default function PlanCreatePage() {
   const handleSubmit = async () => {
     try {
       setSaving(true)
-
+      setError(null)
       const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 
       if (isEditMode) {

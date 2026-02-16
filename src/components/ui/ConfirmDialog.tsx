@@ -28,6 +28,7 @@ export default function ConfirmDialog({
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative w-[420px] max-w-[calc(100%-32px)] rounded-2xl border border-border/40 bg-card p-6 shadow-xl">
         <button
+          type="button"
           onClick={onClose}
           className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary"
         >
@@ -39,12 +40,14 @@ export default function ConfirmDialog({
 
         <div className="mt-6 flex justify-end gap-2">
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg border border-border/50 px-4 py-2 text-sm hover:bg-secondary"
           >
             {cancelText}
           </button>
           <button
+            type="button"
             onClick={onConfirm}
             className={
               destructive

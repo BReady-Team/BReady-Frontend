@@ -290,6 +290,7 @@ export default function PlanDetailPage() {
             setDeleting(true)
             await deletePlan(plan.id)
             navigate('/plans')
+            return
           } catch {
             alert('삭제에 실패했습니다.')
           } finally {
@@ -349,7 +350,10 @@ export default function PlanDetailPage() {
               prev.map(cat => {
                 const filtered = cat.candidates.filter(p => p.id !== deleteCandidateId)
 
-                if (filtered.length === 0) return cat
+                if (filtered.length === 0) {
+                  alert('마지막 후보는 삭제할 수 없습니다.')
+                  return cat
+                }
 
                 const wasRepresentative = cat.representativePlace.id === deleteCandidateId
 
