@@ -12,7 +12,7 @@ import {
   MapPin,
 } from 'lucide-react'
 
-import type { CategoryType, TriggerType, Place } from '@/types/plan'
+import type { CategoryType, TriggerType, Candidate } from '@/types/plan'
 import { categoryLabels, triggerLabels, mockSearchResults } from '../mock/mockPlans'
 import { cn } from '@/lib/utils'
 
@@ -27,8 +27,8 @@ const triggerIcons: Record<TriggerType, React.ElementType> = {
 interface TriggerPanelProps {
   isOpen: boolean
   categoryType: CategoryType
-  candidates: Place[]
-  representativePlaceId: number
+  candidates: Candidate[]
+  representativeCandidateId: number
   onClose: () => void
   onTrigger: (trigger: TriggerType) => Promise<void>
   onKeep: () => Promise<void>
@@ -42,12 +42,11 @@ export default function TriggerPanel({
   isOpen,
   categoryType,
   candidates,
-  representativePlaceId,
+  representativeCandidateId,
   onClose,
   onTrigger,
   onKeep,
   onSwitchPlace,
-
   onChangeCategory,
 }: TriggerPanelProps) {
   const [step, setStep] = useState<'select' | 'decision' | 'change-category' | 'change-place'>(
@@ -251,41 +250,42 @@ export default function TriggerPanel({
 
               {placeTab === 'candidates' &&
                 candidates
-                  .filter(p => p.id !== representativePlaceId)
-                  .map(place => (
-                    <button
-                      key={place.id}
-                      disabled={busy}
-                      onClick={async () => {
-                        try {
-                          setBusy(true)
-                          await onSwitchPlace(place.id)
-                          resetAndClose()
-                        } finally {
-                          setBusy(false)
-                        }
-                      }}
-                      className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
-                    >
-                      <img
-                        src={place.thumbnailUrl ?? '/seoul_forest.jpg'}
-                        className="h-12 w-16 rounded-md object-cover"
-                      />
-                      <div>
-                        <p className="text-sm font-medium">{place.name}</p>
-                        <p className="text-xs text-muted-foreground">{place.location}</p>
-                      </div>
-                    </button>
-                  ))}
+                  .filter(c => c.id !== representativeCandidateId)
+                  .map(candidate => {
+                    const place = candidate.place
+                    return (
+                      <button
+                        key={candidate.id}
+                        disabled={busy}
+                        onClick={async () => {
+                          try {
+                            setBusy(true)
+                            await onSwitchPlace(candidate.id)
+                            resetAndClose()
+                          } finally {
+                            setBusy(false)
+                          }
+                        }}
+                        className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
+                      >
+                        <img
+                          src={place.thumbnailUrl ?? '/seoul_forest.jpg'}
+                          className="h-12 w-16 rounded-md object-cover"
+                        />
+                        <div>
+                          <p className="text-sm font-medium">{place.name}</p>
+                          <p className="text-xs text-muted-foreground">{place.location}</p>
+                        </div>
+                      </button>
+                    )
+                  })}
 
               {placeTab === 'recommend' &&
                 mockSearchResults.map(place => (
                   <button
                     key={place.id}
                     disabled={busy}
-                    onClick={() => {
-                      resetAndClose()
-                    }}
+                    onClick={() => resetAndClose()}
                     className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
                   >
                     <img

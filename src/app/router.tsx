@@ -36,6 +36,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/plans', element: <PlanListPage /> },
           { path: '/plans/new', element: <PlanCreatePage /> },
+          { path: '/plans/:planId/edit', element: <PlanCreatePage /> },
           { path: '/plans/:planId', element: <PlanDetailPageWrapper /> },
           { path: '/stats', element: <StatsPage /> },
           { path: '/mypage', element: <MyPage /> },

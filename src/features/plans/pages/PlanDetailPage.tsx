@@ -1,8 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin } from 'lucide-react'
-
-import type { Place, Category, CategoryType, TriggerType } from '@/types/plan'
 import { mockPlans } from '../mock/mockPlans'
 
 import CategoryCard from '../components/CategoryCard'
@@ -13,6 +12,9 @@ import { formatKoreanDate } from '@/lib/date'
 
 import { setRepresentative } from '@/lib/api/place'
 import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
+import { deletePlan, deletePlanCategory, deleteCandidate } from '../api'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import type { Place, Category, CategoryType, TriggerType, Candidate } from '@/types/plan'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -29,9 +31,15 @@ export default function PlanDetailPage() {
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null)
   const [isManageOpen, setIsManageOpen] = useState(false)
   const [triggerId, setTriggerId] = useState<number | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null)
+  const [categoryDeleting, setCategoryDeleting] = useState(false)
+  const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null)
+  const [candidateDeleting, setCandidateDeleting] = useState(false)
+  const activeCategory = categories.find(c => c.id === activeCategoryId) ?? null
 
-  const activeCategory = categories.find(c => c.id === activeCategoryId)
-
+  const navigate = useNavigate()
   const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
   }
@@ -52,23 +60,26 @@ export default function PlanDetailPage() {
     setActiveCategoryId(null)
   }
 
-  const handleSelectRepresentative = async (categoryId: number, placeId: number) => {
+  const handleSelectRepresentative = async (categoryId: number, candidateId: number) => {
     try {
-      await setRepresentative(placeId)
+      // 서버 API가 placeId를 요구한다면 여기서 placeId를 추출해서 호출
+      const targetCategory = categories.find(c => c.id === categoryId)
+      const targetCandidate = targetCategory?.candidates.find(c => c.id === candidateId)
+
+      if (!targetCandidate) return
+
+      await setRepresentative(candidateId)
 
       setCategories(prev =>
         prev.map(cat => {
           if (cat.id !== categoryId) return cat
 
-          const newRep = cat.candidates.find(p => p.id === placeId)
-          if (!newRep) return cat
-
           return {
             ...cat,
-            representativePlace: { ...newRep, isRepresentative: true },
-            candidates: cat.candidates.map(p => ({
-              ...p,
-              isRepresentative: p.id === placeId,
+            representativeCandidateId: candidateId,
+            candidates: cat.candidates.map(c => ({
+              ...c,
+              isRepresentative: c.id === candidateId,
             })),
           }
         }),
@@ -80,9 +91,15 @@ export default function PlanDetailPage() {
   }
 
   const handleAddPlace = (categoryId: number, place: Place) => {
+    const tempCandidate: Candidate = {
+      id: Date.now(), // 임시 candidateId (서버 연동 전)
+      place,
+      isRepresentative: false,
+    }
+
     setCategories(prev =>
       prev.map(cat =>
-        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, place] } : cat,
+        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, tempCandidate] } : cat,
       ),
     )
   }
@@ -134,12 +151,9 @@ export default function PlanDetailPage() {
       prev.map(cat => {
         if (cat.id !== activeCategory.id) return cat
 
-        const newRep = cat.candidates.find(p => p.id === toCandidateId)
-        if (!newRep) return cat
-
         return {
           ...cat,
-          representativePlace: { ...newRep, isRepresentative: true },
+          representativeCandidateId: toCandidateId,
           candidates: cat.candidates.map(p => ({
             ...p,
             isRepresentative: p.id === toCandidateId,
@@ -191,7 +205,7 @@ export default function PlanDetailPage() {
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
                     onClick={() => {
                       setIsManageOpen(false)
-                      console.log('수정')
+                      navigate(`/plans/${plan.id}/edit`)
                     }}
                   >
                     ✏️ 수정
@@ -213,7 +227,7 @@ export default function PlanDetailPage() {
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setIsManageOpen(false)
-                      console.log('삭제')
+                      setDeleteOpen(true)
                     }}
                   >
                     🗑️ 삭제
@@ -231,9 +245,25 @@ export default function PlanDetailPage() {
               category={category}
               isExpanded={expandedCategoryId === category.id}
               onToggle={() => toggleCategory(category.id)}
-              onSelectRepresentative={placeId => handleSelectRepresentative(category.id, placeId)}
+              onSelectRepresentative={candidateId =>
+                handleSelectRepresentative(category.id, candidateId)
+              }
               onSearch={() => openSearchPanel(category.id)}
               onTrigger={() => openTriggerPanel(category.id)}
+              onDelete={() => setDeleteCategoryId(category.id)}
+              onDeleteCandidate={candidateId => {
+                const targetCategory = categories.find(cat =>
+                  cat.candidates.some(c => c.id === candidateId),
+                )
+                if (!targetCategory) return
+
+                if (targetCategory.candidates.length <= 1) {
+                  alert('마지막 후보는 삭제할 수 없습니다. 카테고리를 삭제해주세요.')
+                  return
+                }
+
+                setDeleteCandidateId(candidateId)
+              }}
             />
           ))}
 
@@ -256,7 +286,7 @@ export default function PlanDetailPage() {
           isOpen
           categoryType={activeCategory.type}
           candidates={activeCategory.candidates}
-          representativePlaceId={activeCategory.representativePlace.id}
+          representativeCandidateId={activeCategory.representativeCandidateId}
           onClose={closePanel}
           onTrigger={handleTrigger}
           onKeep={handleKeep}
@@ -264,6 +294,106 @@ export default function PlanDetailPage() {
           onChangeCategory={handleChangeCategory}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="플랜을 삭제할까요?"
+        description="삭제하면 복구할 수 없습니다."
+        confirmText={deleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!deleting) setDeleteOpen(false)
+        }}
+        onConfirm={async () => {
+          try {
+            setDeleting(true)
+            await deletePlan(plan.id)
+            navigate('/plans')
+            return
+          } catch {
+            alert('삭제에 실패했습니다.')
+          } finally {
+            setDeleting(false)
+            setDeleteOpen(false)
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteCategoryId !== null}
+        title="카테고리를 삭제할까요?"
+        description="해당 카테고리와 후보 장소가 모두 삭제됩니다."
+        confirmText={categoryDeleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!categoryDeleting) setDeleteCategoryId(null)
+        }}
+        onConfirm={async () => {
+          if (deleteCategoryId === null) return
+
+          try {
+            setCategoryDeleting(true)
+
+            await deletePlanCategory(plan.id, deleteCategoryId)
+
+            setCategories(prev => prev.filter(cat => cat.id !== deleteCategoryId))
+          } catch {
+            alert('카테고리 삭제에 실패했습니다.')
+          } finally {
+            setCategoryDeleting(false)
+            setDeleteCategoryId(null)
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteCandidateId !== null}
+        title="후보 장소를 삭제할까요?"
+        description="대표 장소인 경우 다음 후보가 자동으로 대표가 됩니다."
+        confirmText={candidateDeleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!candidateDeleting) setDeleteCandidateId(null)
+        }}
+        onConfirm={async () => {
+          if (deleteCandidateId === null) return
+
+          try {
+            setCandidateDeleting(true)
+
+            await deleteCandidate(deleteCandidateId)
+
+            setCategories(prev =>
+              prev.map(cat => {
+                const filtered = cat.candidates.filter(p => p.id !== deleteCandidateId)
+
+                if (filtered.length === 0) {
+                  alert('마지막 후보는 삭제할 수 없습니다.')
+                  return cat
+                }
+
+                const wasRepresentative = cat.representativeCandidateId === deleteCandidateId
+
+                return {
+                  ...cat,
+                  candidates: filtered,
+                  representativeCandidateId: wasRepresentative
+                    ? filtered[0].id
+                    : cat.representativeCandidateId,
+                }
+              }),
+            )
+          } catch {
+            alert('후보 삭제에 실패했습니다.')
+          } finally {
+            setCandidateDeleting(false)
+            setDeleteCandidateId(null)
+          }
+        }}
+      />
     </div>
   )
 }

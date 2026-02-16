@@ -1,4 +1,4 @@
-import { ChevronDown, GripVertical, Plus, Zap } from 'lucide-react'
+import { ChevronDown, GripVertical, Plus, Zap, Trash2 } from 'lucide-react'
 import type { Category } from '@/types/plan'
 import PlaceItem from './PlaceItem'
 import { cn } from '@/lib/utils'
@@ -9,9 +9,11 @@ interface CategoryCardProps {
   isExpanded: boolean
   isDragging?: boolean
   onToggle: () => void
-  onSelectRepresentative: (placeId: number) => void
+  onSelectRepresentative: (candidateId: number) => void
   onTrigger: () => void
   onSearch: () => void
+  onDelete: () => void
+  onDeleteCandidate: (candidateId: number) => void
 }
 
 export default function CategoryCard({
@@ -22,9 +24,13 @@ export default function CategoryCard({
   onSelectRepresentative,
   onTrigger,
   onSearch,
+  onDelete,
+  onDeleteCandidate,
 }: CategoryCardProps) {
-  const { type, representativePlace, candidates } = category
+  const { type, representativeCandidateId, candidates } = category
   const { label, Icon } = categoryMeta[type]
+  const representativeCandidate = candidates.find(c => c.id === representativeCandidateId) ?? null
+
   return (
     <div
       className={cn(
@@ -48,17 +54,41 @@ export default function CategoryCard({
           <span className="ml-2 text-xs text-muted-foreground">후보 {candidates.length}개</span>
         </div>
 
-        <ChevronDown
-          className={cn(
-            'h-5 w-5 text-muted-foreground transition-transform',
-            isExpanded && 'rotate-180',
-          )}
-        />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={`${label} 카테고리 삭제`}
+            onClick={e => {
+              e.stopPropagation()
+              onDelete()
+            }}
+            className="p-1 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+
+          <ChevronDown
+            className={cn(
+              'h-5 w-5 text-muted-foreground transition-transform',
+              isExpanded && 'rotate-180',
+            )}
+          />
+        </div>
       </div>
 
       {/* 대표 장소 */}
       <div className="border-t border-border/30 p-4">
-        <PlaceItem place={representativePlace} isRepresentative onSelect={() => {}} />
+        {representativeCandidate ? (
+          <PlaceItem
+            place={representativeCandidate.place}
+            isRepresentative
+            onSelect={() => {}}
+            onDelete={() => onDeleteCandidate(representativeCandidate.id)}
+            canDelete={candidates.length > 1}
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground text-center py-4">대표 장소가 없습니다.</p>
+        )}
 
         <div className="mt-4">
           <button
@@ -94,12 +124,14 @@ export default function CategoryCard({
           </div>
 
           {candidates.length > 0 ? (
-            candidates.map(place => (
+            candidates.map(candidate => (
               <PlaceItem
-                key={place.id}
-                place={place}
-                isRepresentative={place.id === representativePlace.id}
-                onSelect={() => onSelectRepresentative(place.id)}
+                key={candidate.id}
+                place={candidate.place}
+                isRepresentative={candidate.id === representativeCandidateId}
+                onSelect={() => onSelectRepresentative(candidate.id)}
+                onDelete={() => onDeleteCandidate(candidate.id)}
+                canDelete={candidates.length > 1}
               />
             ))
           ) : (

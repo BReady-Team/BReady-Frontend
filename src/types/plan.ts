@@ -23,8 +23,14 @@ export type Category = {
   id: number
   type: CategoryType
   order: number
-  representativePlace: Place
-  candidates: Place[]
+  representativeCandidateId: number
+  candidates: Candidate[]
+}
+
+export type Candidate = {
+  id: number // candidateId (삭제 대상)
+  place: Place // 실제 장소 정보
+  isRepresentative: boolean
 }
 
 export type Plan = {
