@@ -9,7 +9,7 @@ interface CategoryCardProps {
   isExpanded: boolean
   isDragging?: boolean
   onToggle: () => void
-  onSelectRepresentative: (placeId: number) => void
+  onSelectRepresentative: (candidateId: number) => void
   onTrigger: () => void
   onSearch: () => void
   onDelete: () => void
@@ -27,8 +27,10 @@ export default function CategoryCard({
   onDelete,
   onDeleteCandidate,
 }: CategoryCardProps) {
-  const { type, representativePlace, candidates } = category
+  const { type, representativeCandidateId, candidates } = category
   const { label, Icon } = categoryMeta[type]
+  const representativeCandidate = candidates.find(c => c.id === representativeCandidateId) ?? null
+
   return (
     <div
       className={cn(
@@ -76,13 +78,17 @@ export default function CategoryCard({
 
       {/* 대표 장소 */}
       <div className="border-t border-border/30 p-4">
-        <PlaceItem
-          place={representativePlace}
-          isRepresentative
-          onSelect={() => {}}
-          onDelete={() => onDeleteCandidate(representativePlace.id)}
-          canDelete={candidates.length > 1}
-        />
+        {representativeCandidate ? (
+          <PlaceItem
+            place={representativeCandidate.place}
+            isRepresentative
+            onSelect={() => {}}
+            onDelete={() => onDeleteCandidate(representativeCandidate.id)}
+            canDelete={candidates.length > 1}
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground text-center py-4">대표 장소가 없습니다.</p>
+        )}
 
         <div className="mt-4">
           <button
@@ -118,13 +124,13 @@ export default function CategoryCard({
           </div>
 
           {candidates.length > 0 ? (
-            candidates.map(place => (
+            candidates.map(candidate => (
               <PlaceItem
-                key={place.id}
-                place={place}
-                isRepresentative={place.id === representativePlace.id}
-                onSelect={() => onSelectRepresentative(place.id)}
-                onDelete={() => onDeleteCandidate(place.id)}
+                key={candidate.id}
+                place={candidate.place}
+                isRepresentative={candidate.id === representativeCandidateId}
+                onSelect={() => onSelectRepresentative(candidate.id)}
+                onDelete={() => onDeleteCandidate(candidate.id)}
                 canDelete={candidates.length > 1}
               />
             ))

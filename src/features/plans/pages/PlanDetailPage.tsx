@@ -2,8 +2,6 @@ import { useParams } from 'react-router-dom'
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin } from 'lucide-react'
-
-import type { Place, Category, CategoryType, TriggerType } from '@/types/plan'
 import { mockPlans } from '../mock/mockPlans'
 
 import CategoryCard from '../components/CategoryCard'
@@ -16,6 +14,7 @@ import { setRepresentative } from '@/lib/api/place'
 import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
 import { deletePlan, deletePlanCategory, deleteCandidate } from '../api'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import type { Place, Category, CategoryType, TriggerType, Candidate } from '@/types/plan'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -38,7 +37,14 @@ export default function PlanDetailPage() {
   const [categoryDeleting, setCategoryDeleting] = useState(false)
   const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null)
   const [candidateDeleting, setCandidateDeleting] = useState(false)
-  const activeCategory = categories.find(c => c.id === activeCategoryId)
+  const activeCategory = categories.find(c => c.id === activeCategoryId) ?? null
+
+  const activeRepresentativeCandidate = useMemo(() => {
+    if (!activeCategory) return null
+    return (
+      activeCategory.candidates.find(c => c.id === activeCategory.representativeCandidateId) ?? null
+    )
+  }, [activeCategory])
   const navigate = useNavigate()
   const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
@@ -60,23 +66,26 @@ export default function PlanDetailPage() {
     setActiveCategoryId(null)
   }
 
-  const handleSelectRepresentative = async (categoryId: number, placeId: number) => {
+  const handleSelectRepresentative = async (categoryId: number, candidateId: number) => {
     try {
-      await setRepresentative(placeId)
+      // 서버 API가 placeId를 요구한다면 여기서 placeId를 추출해서 호출
+      const targetCategory = categories.find(c => c.id === categoryId)
+      const targetCandidate = targetCategory?.candidates.find(c => c.id === candidateId)
+
+      if (!targetCandidate) return
+
+      await setRepresentative(targetCandidate.place.id)
 
       setCategories(prev =>
         prev.map(cat => {
           if (cat.id !== categoryId) return cat
 
-          const newRep = cat.candidates.find(p => p.id === placeId)
-          if (!newRep) return cat
-
           return {
             ...cat,
-            representativePlace: { ...newRep, isRepresentative: true },
-            candidates: cat.candidates.map(p => ({
-              ...p,
-              isRepresentative: p.id === placeId,
+            representativeCandidateId: candidateId,
+            candidates: cat.candidates.map(c => ({
+              ...c,
+              isRepresentative: c.id === candidateId,
             })),
           }
         }),
@@ -88,9 +97,15 @@ export default function PlanDetailPage() {
   }
 
   const handleAddPlace = (categoryId: number, place: Place) => {
+    const tempCandidate: Candidate = {
+      id: Date.now(), // 임시 candidateId (서버 연동 전)
+      place,
+      isRepresentative: false,
+    }
+
     setCategories(prev =>
       prev.map(cat =>
-        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, place] } : cat,
+        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, tempCandidate] } : cat,
       ),
     )
   }
@@ -239,15 +254,16 @@ export default function PlanDetailPage() {
               category={category}
               isExpanded={expandedCategoryId === category.id}
               onToggle={() => toggleCategory(category.id)}
-              onSelectRepresentative={placeId => handleSelectRepresentative(category.id, placeId)}
+              onSelectRepresentative={candidateId =>
+                handleSelectRepresentative(category.id, candidateId)
+              }
               onSearch={() => openSearchPanel(category.id)}
               onTrigger={() => openTriggerPanel(category.id)}
               onDelete={() => setDeleteCategoryId(category.id)}
               onDeleteCandidate={candidateId => {
                 const targetCategory = categories.find(cat =>
-                  cat.candidates.some(p => p.id === candidateId),
+                  cat.candidates.some(c => c.id === candidateId),
                 )
-
                 if (!targetCategory) return
 
                 if (targetCategory.candidates.length <= 1) {
@@ -278,8 +294,8 @@ export default function PlanDetailPage() {
         <TriggerPanel
           isOpen
           categoryType={activeCategory.type}
-          candidates={activeCategory.candidates}
-          representativePlaceId={activeCategory.representativePlace.id}
+          candidates={activeCategory.candidates.map(c => c.place)}
+          representativePlaceId={activeRepresentativeCandidate?.place.id ?? null}
           onClose={closePanel}
           onTrigger={handleTrigger}
           onKeep={handleKeep}
@@ -368,12 +384,14 @@ export default function PlanDetailPage() {
                   return cat
                 }
 
-                const wasRepresentative = cat.representativePlace.id === deleteCandidateId
+                const wasRepresentative = cat.representativeCandidateId === deleteCandidateId
 
                 return {
                   ...cat,
                   candidates: filtered,
-                  representativePlace: wasRepresentative ? filtered[0] : cat.representativePlace,
+                  representativeCandidateId: wasRepresentative
+                    ? filtered[0].id
+                    : cat.representativeCandidateId,
                 }
               }),
             )
