@@ -39,12 +39,6 @@ export default function PlanDetailPage() {
   const [candidateDeleting, setCandidateDeleting] = useState(false)
   const activeCategory = categories.find(c => c.id === activeCategoryId) ?? null
 
-  const activeRepresentativeCandidate = useMemo(() => {
-    if (!activeCategory) return null
-    return (
-      activeCategory.candidates.find(c => c.id === activeCategory.representativeCandidateId) ?? null
-    )
-  }, [activeCategory])
   const navigate = useNavigate()
   const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
@@ -157,12 +151,9 @@ export default function PlanDetailPage() {
       prev.map(cat => {
         if (cat.id !== activeCategory.id) return cat
 
-        const newRep = cat.candidates.find(p => p.id === toCandidateId)
-        if (!newRep) return cat
-
         return {
           ...cat,
-          representativePlace: { ...newRep, isRepresentative: true },
+          representativeCandidateId: toCandidateId,
           candidates: cat.candidates.map(p => ({
             ...p,
             isRepresentative: p.id === toCandidateId,
@@ -294,8 +285,8 @@ export default function PlanDetailPage() {
         <TriggerPanel
           isOpen
           categoryType={activeCategory.type}
-          candidates={activeCategory.candidates.map(c => c.place)}
-          representativePlaceId={activeRepresentativeCandidate?.place.id ?? null}
+          candidates={activeCategory.candidates}
+          representativeCandidateId={activeCategory.representativeCandidateId}
           onClose={closePanel}
           onTrigger={handleTrigger}
           onKeep={handleKeep}
