@@ -243,7 +243,20 @@ export default function PlanDetailPage() {
               onSearch={() => openSearchPanel(category.id)}
               onTrigger={() => openTriggerPanel(category.id)}
               onDelete={() => setDeleteCategoryId(category.id)}
-              onDeleteCandidate={candidateId => setDeleteCandidateId(candidateId)}
+              onDeleteCandidate={candidateId => {
+                const targetCategory = categories.find(cat =>
+                  cat.candidates.some(p => p.id === candidateId),
+                )
+
+                if (!targetCategory) return
+
+                if (targetCategory.candidates.length <= 1) {
+                  alert('마지막 후보는 삭제할 수 없습니다. 카테고리를 삭제해주세요.')
+                  return
+                }
+
+                setDeleteCandidateId(candidateId)
+              }}
             />
           ))}
 

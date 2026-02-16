@@ -7,9 +7,16 @@ interface PlaceItemProps {
   isRepresentative: boolean
   onSelect: () => void
   onDelete: () => void
+  canDelete: boolean
 }
 
-export default function PlaceItem({ place, isRepresentative, onSelect, onDelete }: PlaceItemProps) {
+export default function PlaceItem({
+  place,
+  isRepresentative,
+  onSelect,
+  onDelete,
+  canDelete,
+}: PlaceItemProps) {
   return (
     <div
       onClick={onSelect}
@@ -40,17 +47,28 @@ export default function PlaceItem({ place, isRepresentative, onSelect, onDelete 
             )}
           </div>
 
-          <button
-            type="button"
-            aria-label={`${place.name} 삭제`}
-            onClick={e => {
-              e.stopPropagation()
-              onDelete()
-            }}
-            className="p-1 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {canDelete ? (
+            <button
+              type="button"
+              aria-label={`${place.name} 삭제`}
+              onClick={e => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="p-1 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="마지막 후보는 삭제할 수 없습니다. 카테고리를 삭제해주세요."
+              className="p-1 rounded-md opacity-40 cursor-not-allowed"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

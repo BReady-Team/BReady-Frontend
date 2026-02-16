@@ -81,6 +81,7 @@ export default function CategoryCard({
           isRepresentative
           onSelect={() => {}}
           onDelete={() => onDeleteCandidate(representativePlace.id)}
+          canDelete={candidates.length > 1}
         />
 
         <div className="mt-4">
@@ -124,6 +125,7 @@ export default function CategoryCard({
                 isRepresentative={place.id === representativePlace.id}
                 onSelect={() => onSelectRepresentative(place.id)}
                 onDelete={() => onDeleteCandidate(place.id)}
+                canDelete={candidates.length > 1}
               />
             ))
           ) : (
