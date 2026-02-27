@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/stores/authStore'
+import { loginApi } from '@/lib/api/auth'
+import axios from 'axios'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -17,33 +19,32 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
 
     try {
-      /* TODO (나중에 API 붙이면 됨)
-       *
-       * const res = await authApi.login({ email, password })
-       * login({
-       *   accessToken: res.data.accessToken,
-       *   refreshToken: res.data.refreshToken,
-       *   user: res.data.user,
-       * })
-       */
+      setIsLoading(true)
 
-      // 지금은 mock 로그인으로 대체
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const res = await loginApi({ email, password })
+      const { accessToken, refreshToken } = res.data.data
 
       login({
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
+        accessToken,
+        refreshToken,
         user: {
-          id: 1,
           email,
-          nickname: '승인',
         },
       })
 
       navigate('/plans')
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert('이메일 또는 비밀번호가 올바르지 않습니다.')
+        } else {
+          alert(error.response?.data?.message ?? '로그인에 실패했습니다.')
+        }
+      } else {
+        alert('알 수 없는 오류가 발생했습니다.')
+      }
     } finally {
       setIsLoading(false)
     }

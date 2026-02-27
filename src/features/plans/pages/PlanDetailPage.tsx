@@ -1,9 +1,8 @@
 import { useParams } from 'react-router-dom'
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin } from 'lucide-react'
-import type { Place } from '@/types/plan'
 import { mockPlans } from '../mock/mockPlans'
-import type { Category, CategoryType } from '@/types/plan'
 
 import CategoryCard from '../components/CategoryCard'
 import AddCategoryButton from '../components/AddCategoryButton'
@@ -11,27 +10,48 @@ import SearchPanel from '../panels/SearchPanel'
 import TriggerPanel from '../panels/TriggerPanel'
 import { formatKoreanDate } from '@/lib/date'
 
+import { setRepresentative } from '@/lib/api/place'
+import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
+import { deletePlan, deletePlanCategory, deleteCandidate } from '../api'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import type { Place, Category, CategoryType, TriggerType, Candidate } from '@/types/plan'
+
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
-  const plan = useMemo(() => mockPlans.find(p => p.id === planId) ?? mockPlans[0], [planId])
-  const [categories, setCategories] = useState<Category[]>(() => plan.categories)
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
-  const [activePanel, setActivePanel] = useState<'none' | 'search' | 'trigger'>('none')
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
-  const [isManageOpen, setIsManageOpen] = useState(false)
+  const numericPlanId = Number(planId)
 
-  const activeCategory = categories.find(c => c.id === activeCategoryId)
-  const toggleCategory = (id: string) => {
+  const plan = useMemo(
+    () => mockPlans.find(p => p.id === numericPlanId) ?? mockPlans[0],
+    [numericPlanId],
+  )
+
+  const [categories, setCategories] = useState<Category[]>(() => plan.categories)
+  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null)
+  const [activePanel, setActivePanel] = useState<'none' | 'search' | 'trigger'>('none')
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null)
+  const [isManageOpen, setIsManageOpen] = useState(false)
+  const [triggerId, setTriggerId] = useState<number | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null)
+  const [categoryDeleting, setCategoryDeleting] = useState(false)
+  const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null)
+  const [candidateDeleting, setCandidateDeleting] = useState(false)
+  const activeCategory = categories.find(c => c.id === activeCategoryId) ?? null
+
+  const navigate = useNavigate()
+  const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
   }
 
-  const openSearchPanel = (categoryId: string) => {
+  const openSearchPanel = (categoryId: number) => {
     setActiveCategoryId(categoryId)
     setActivePanel('search')
   }
 
-  const openTriggerPanel = (categoryId: string) => {
+  const openTriggerPanel = (categoryId: number) => {
     setActiveCategoryId(categoryId)
+    setTriggerId(null) // 패널 열 때마다 초기화
     setActivePanel('trigger')
   }
 
@@ -40,72 +60,118 @@ export default function PlanDetailPage() {
     setActiveCategoryId(null)
   }
 
-  const handleSelectRepresentative = (categoryId: string, placeId: string) => {
-    setCategories(prev =>
-      prev.map(cat => {
-        if (cat.id !== categoryId) return cat
-        const newRep = cat.candidates.find(p => p.id === placeId)
-        if (!newRep) return cat
+  const handleSelectRepresentative = async (categoryId: number, candidateId: number) => {
+    try {
+      // 서버 API가 placeId를 요구한다면 여기서 placeId를 추출해서 호출
+      const targetCategory = categories.find(c => c.id === categoryId)
+      const targetCandidate = targetCategory?.candidates.find(c => c.id === candidateId)
 
-        return {
-          ...cat,
-          representativePlace: { ...newRep, isRepresentative: true },
-          candidates: cat.candidates.map(p => ({
-            ...p,
-            isRepresentative: p.id === placeId,
-          })),
-        }
-      }),
-    )
+      if (!targetCandidate) return
+
+      await setRepresentative(candidateId)
+
+      setCategories(prev =>
+        prev.map(cat => {
+          if (cat.id !== categoryId) return cat
+
+          return {
+            ...cat,
+            representativeCandidateId: candidateId,
+            candidates: cat.candidates.map(c => ({
+              ...c,
+              isRepresentative: c.id === candidateId,
+            })),
+          }
+        }),
+      )
+    } catch (e) {
+      console.error(e)
+      alert('대표 장소 변경 실패')
+    }
   }
 
-  const handleAddPlace = (categoryId: string, place: Category['candidates'][number]) => {
+  const handleAddPlace = (categoryId: number, place: Place) => {
+    const tempCandidate: Candidate = {
+      id: Date.now(), // 임시 candidateId (서버 연동 전)
+      place,
+      isRepresentative: false,
+    }
+
     setCategories(prev =>
       prev.map(cat =>
-        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, place] } : cat,
+        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, tempCandidate] } : cat,
       ),
     )
   }
 
   const handleChangeCategory = (newType: CategoryType) => {
     if (!activeCategoryId) return
+
     setCategories(prev =>
       prev.map(cat => (cat.id === activeCategoryId ? { ...cat, type: newType } : cat)),
     )
   }
 
-  const handleChangePlace = (place: Place) => {
-    if (!activeCategoryId) return
+  // 트리거 발생
+  const handleTrigger = async (triggerType: TriggerType) => {
+    if (!activeCategory) return
 
+    const res = await createTrigger(plan.id, activeCategory.id, triggerType)
+    setTriggerId(res.triggerId)
+  }
+
+  // KEEP 결정
+  const handleKeep = async () => {
+    if (!triggerId) {
+      alert('트리거가 먼저 생성되어야 합니다. (트리거 선택을 다시 해주세요)')
+      return
+    }
+
+    await createDecision(triggerId, 'KEEP')
+    closePanel()
+  }
+
+  // SWITCH 확정
+  const handleSwitchPlace = async (toCandidateId: number) => {
+    if (!activeCategory) return
+
+    if (!triggerId) {
+      alert('트리거가 먼저 생성되어야 합니다. (트리거 선택을 다시 해주세요)')
+      return
+    }
+
+    // SWITCH 결정 생성
+    const decisionRes = await createDecision(triggerId, 'SWITCH')
+
+    // 실제 대표 후보 변경 확정
+    await executeSwitch(decisionRes.decisionId, toCandidateId)
+
+    // UI 대표 후보 변경 (서버에서 대표 바꿨으니 프론트도 동기화)
     setCategories(prev =>
       prev.map(cat => {
-        if (cat.id !== activeCategoryId) return cat
-
-        const exists = cat.candidates.some(p => p.id === place.id)
-
-        const updatedCandidates = exists ? cat.candidates : [...cat.candidates, place]
+        if (cat.id !== activeCategory.id) return cat
 
         return {
           ...cat,
-          candidates: updatedCandidates.map(p => ({
+          representativeCandidateId: toCandidateId,
+          candidates: cat.candidates.map(p => ({
             ...p,
-            isRepresentative: p.id === place.id,
+            isRepresentative: p.id === toCandidateId,
           })),
-          representativePlace: { ...place, isRepresentative: true },
         }
       }),
     )
+
+    closePanel()
   }
 
   return (
     <div className="relative min-h-screen">
-      {/* 메인 콘텐츠 부분 */}
       <div
         className={`mx-auto max-w-3xl px-6 py-12 transition-all ${
           activePanel !== 'none' ? 'mr-[420px]' : ''
         }`}
       >
-        {/* 헤더 */}
         <header className="mb-10 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-semibold">{plan.title}</h1>
@@ -123,7 +189,6 @@ export default function PlanDetailPage() {
             </div>
           </div>
 
-          {/* 관리 버튼 */}
           <div className="relative">
             <button
               onClick={() => setIsManageOpen(prev => !prev)}
@@ -140,7 +205,7 @@ export default function PlanDetailPage() {
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
                     onClick={() => {
                       setIsManageOpen(false)
-                      console.log('수정')
+                      navigate(`/plans/${plan.id}/edit`)
                     }}
                   >
                     ✏️ 수정
@@ -162,7 +227,7 @@ export default function PlanDetailPage() {
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setIsManageOpen(false)
-                      console.log('삭제')
+                      setDeleteOpen(true)
                     }}
                   >
                     🗑️ 삭제
@@ -173,7 +238,6 @@ export default function PlanDetailPage() {
           </div>
         </header>
 
-        {/* 카테고리 */}
         <div className="space-y-4">
           {categories.map(category => (
             <CategoryCard
@@ -181,9 +245,25 @@ export default function PlanDetailPage() {
               category={category}
               isExpanded={expandedCategoryId === category.id}
               onToggle={() => toggleCategory(category.id)}
-              onSelectRepresentative={placeId => handleSelectRepresentative(category.id, placeId)}
+              onSelectRepresentative={candidateId =>
+                handleSelectRepresentative(category.id, candidateId)
+              }
               onSearch={() => openSearchPanel(category.id)}
               onTrigger={() => openTriggerPanel(category.id)}
+              onDelete={() => setDeleteCategoryId(category.id)}
+              onDeleteCandidate={candidateId => {
+                const targetCategory = categories.find(cat =>
+                  cat.candidates.some(c => c.id === candidateId),
+                )
+                if (!targetCategory) return
+
+                if (targetCategory.candidates.length <= 1) {
+                  alert('마지막 후보는 삭제할 수 없습니다. 카테고리를 삭제해주세요.')
+                  return
+                }
+
+                setDeleteCandidateId(candidateId)
+              }}
             />
           ))}
 
@@ -191,9 +271,11 @@ export default function PlanDetailPage() {
         </div>
       </div>
 
-      {/* 패널 */}
       {activePanel === 'search' && activeCategory && (
         <SearchPanel
+          planId={plan.id}
+          categoryId={activeCategory.id}
+          categoryType={activeCategory.type}
           onClose={closePanel}
           onAddPlace={place => handleAddPlace(activeCategory.id, place)}
         />
@@ -204,13 +286,114 @@ export default function PlanDetailPage() {
           isOpen
           categoryType={activeCategory.type}
           candidates={activeCategory.candidates}
-          representativePlaceId={activeCategory.representativePlace.id}
+          representativeCandidateId={activeCategory.representativeCandidateId}
           onClose={closePanel}
-          onKeep={closePanel}
+          onTrigger={handleTrigger}
+          onKeep={handleKeep}
+          onSwitchPlace={handleSwitchPlace}
           onChangeCategory={handleChangeCategory}
-          onChangePlace={handleChangePlace}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="플랜을 삭제할까요?"
+        description="삭제하면 복구할 수 없습니다."
+        confirmText={deleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!deleting) setDeleteOpen(false)
+        }}
+        onConfirm={async () => {
+          try {
+            setDeleting(true)
+            await deletePlan(plan.id)
+            navigate('/plans')
+            return
+          } catch {
+            alert('삭제에 실패했습니다.')
+          } finally {
+            setDeleting(false)
+            setDeleteOpen(false)
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteCategoryId !== null}
+        title="카테고리를 삭제할까요?"
+        description="해당 카테고리와 후보 장소가 모두 삭제됩니다."
+        confirmText={categoryDeleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!categoryDeleting) setDeleteCategoryId(null)
+        }}
+        onConfirm={async () => {
+          if (deleteCategoryId === null) return
+
+          try {
+            setCategoryDeleting(true)
+
+            await deletePlanCategory(plan.id, deleteCategoryId)
+
+            setCategories(prev => prev.filter(cat => cat.id !== deleteCategoryId))
+          } catch {
+            alert('카테고리 삭제에 실패했습니다.')
+          } finally {
+            setCategoryDeleting(false)
+            setDeleteCategoryId(null)
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteCandidateId !== null}
+        title="후보 장소를 삭제할까요?"
+        description="대표 장소인 경우 다음 후보가 자동으로 대표가 됩니다."
+        confirmText={candidateDeleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        destructive
+        onClose={() => {
+          if (!candidateDeleting) setDeleteCandidateId(null)
+        }}
+        onConfirm={async () => {
+          if (deleteCandidateId === null) return
+
+          try {
+            setCandidateDeleting(true)
+
+            await deleteCandidate(deleteCandidateId)
+
+            setCategories(prev =>
+              prev.map(cat => {
+                const filtered = cat.candidates.filter(p => p.id !== deleteCandidateId)
+
+                if (filtered.length === 0) {
+                  alert('마지막 후보는 삭제할 수 없습니다.')
+                  return cat
+                }
+
+                const wasRepresentative = cat.representativeCandidateId === deleteCandidateId
+
+                return {
+                  ...cat,
+                  candidates: filtered,
+                  representativeCandidateId: wasRepresentative
+                    ? filtered[0].id
+                    : cat.representativeCandidateId,
+                }
+              }),
+            )
+          } catch {
+            alert('후보 삭제에 실패했습니다.')
+          } finally {
+            setCandidateDeleting(false)
+            setDeleteCandidateId(null)
+          }
+        }}
+      />
     </div>
   )
 }

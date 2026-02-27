@@ -1,10 +1,18 @@
 export type CategoryType = 'MEAL' | 'CAFE' | 'EXHIBITION' | 'WALK' | 'SHOPPING' | 'REST'
-export type TriggerType = 'WEATHER_BAD' | 'WAITING_LONG' | 'CLOSED' | 'FATIGUE' | 'DISTANCE_FAR'
+export type TriggerType =
+  | 'WEATHER_BAD'
+  | 'WAITING_TOO_LONG'
+  | 'PLACE_CLOSED'
+  | 'FATIGUE'
+  | 'DISTANCE_TOO_FAR'
 
 export type Place = {
-  id: string
+  id: number
+  externalId?: string
   name: string
   location: string
+  latitude?: number
+  longitude?: number
   rating: number
   isIndoor: boolean
   thumbnailUrl?: string
@@ -12,15 +20,21 @@ export type Place = {
 }
 
 export type Category = {
-  id: string
+  id: number
   type: CategoryType
   order: number
-  representativePlace: Place
-  candidates: Place[]
+  representativeCandidateId: number
+  candidates: Candidate[]
+}
+
+export type Candidate = {
+  id: number // candidateId (삭제 대상)
+  place: Place // 실제 장소 정보
+  isRepresentative: boolean
 }
 
 export type Plan = {
-  id: string
+  id: number
   title: string
   date: string
   region: string

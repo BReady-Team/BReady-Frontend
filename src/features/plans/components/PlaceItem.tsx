@@ -1,4 +1,4 @@
-import { MapPin, Star, Check } from 'lucide-react'
+import { MapPin, Star, Check, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Place } from '@/types/plan'
 
@@ -6,9 +6,17 @@ interface PlaceItemProps {
   place: Place
   isRepresentative: boolean
   onSelect: () => void
+  onDelete: () => void
+  canDelete: boolean
 }
 
-export default function PlaceItem({ place, isRepresentative, onSelect }: PlaceItemProps) {
+export default function PlaceItem({
+  place,
+  isRepresentative,
+  onSelect,
+  onDelete,
+  canDelete,
+}: PlaceItemProps) {
   return (
     <div
       onClick={onSelect}
@@ -28,12 +36,38 @@ export default function PlaceItem({ place, isRepresentative, onSelect }: PlaceIt
 
       {/* 정보 */}
       <div className="flex flex-1 flex-col justify-center gap-1">
-        <div className="flex items-center gap-2">
-          <h4 className="text-sm font-medium">{place.name}</h4>
-          {isRepresentative && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-              <Check className="h-3 w-3 text-primary-foreground" />
-            </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium">{place.name}</h4>
+
+            {isRepresentative && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                <Check className="h-3 w-3 text-primary-foreground" />
+              </span>
+            )}
+          </div>
+
+          {canDelete ? (
+            <button
+              type="button"
+              aria-label={`${place.name} 삭제`}
+              onClick={e => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="p-1 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="마지막 후보는 삭제할 수 없습니다. 카테고리를 삭제해주세요."
+              className="p-1 rounded-md opacity-40 cursor-not-allowed"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           )}
         </div>
 

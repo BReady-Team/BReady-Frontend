@@ -14,12 +14,12 @@ export const triggerUiMap: Record<
     label: '날씨 악화',
     color: 'bg-blue-500/20 text-blue-400',
   },
-  WAITING_LONG: {
+  WAITING_TOO_LONG: {
     icon: Clock,
     label: '대기시간 과다',
     color: 'bg-amber-500/20 text-amber-400',
   },
-  CLOSED: {
+  PLACE_CLOSED: {
     icon: XCircle,
     label: '영업 중단',
     color: 'bg-red-500/20 text-red-400',
@@ -29,7 +29,7 @@ export const triggerUiMap: Record<
     label: '체력 저하',
     color: 'bg-purple-500/20 text-purple-400',
   },
-  DISTANCE_FAR: {
+  DISTANCE_TOO_FAR: {
     icon: MapPin,
     label: '거리 부담',
     color: 'bg-green-500/20 text-green-400',
