@@ -68,3 +68,25 @@ export interface CandidateResponse {
   }
   isRepresentative: boolean
 }
+
+export interface PlanDetailCategoryDto {
+  id: number
+  type: string
+  order: number
+  representativeCandidateId: number
+  candidates: PlanDetailCandidateDto[]
+}
+
+export interface PlanDetailCandidateDto {
+  candidateId: number
+  place: {
+    id: number
+    externalId?: string
+    name: string
+    address: string
+    latitude: number
+    longitude: number
+    isIndoor: boolean
+  }
+  isRepresentative: boolean
+}

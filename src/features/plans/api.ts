@@ -1,5 +1,5 @@
 import { http } from '@/lib/http'
-import type { PlanListResponse, PlanDetailResponse } from './types'
+import type { PlanListResponse } from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
 export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
@@ -26,9 +26,38 @@ export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
 }
 
 // 플랜 상세 조회 GET /api/v1/plans/{planId}
-export async function fetchPlanDetail(planId: number): Promise<PlanDetailResponse> {
+export async function fetchPlanDetail(planId: number) {
   const res = await http.get(`/api/v1/plans/${planId}`)
-  return res.data.data
+
+  const data = res.data.data
+
+  return {
+    plan: data.plan,
+
+    categories: data.categories.map((c: any) => ({
+      id: c.categoryId,
+      type: c.categoryType,
+      order: c.order,
+      representativeCandidateId: c.representativeCandidateId,
+
+      candidates: c.candidates.map((cd: any) => ({
+        id: cd.candidateId,
+
+        place: {
+          id: cd.place.id,
+          externalId: cd.place.externalId,
+          name: cd.place.name,
+          location: cd.place.address,
+          latitude: cd.place.latitude,
+          longitude: cd.place.longitude,
+          rating: 0,
+          isIndoor: cd.place.isIndoor ?? false,
+        },
+
+        isRepresentative: cd.isRepresentative ?? false,
+      })),
+    })),
+  }
 }
 
 // 플랜 생성 POST /api/v1/plans

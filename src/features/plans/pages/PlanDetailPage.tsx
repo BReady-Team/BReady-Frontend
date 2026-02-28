@@ -61,31 +61,7 @@ export default function PlanDetailPage() {
           updatedAt: '',
         })
 
-        setCategories(
-          res.categories.map(c => ({
-            id: c.categoryId,
-            type: c.categoryType,
-            order: c.order,
-            representativeCandidateId: c.representativeCandidateId,
-
-            candidates: c.candidates.map(cd => ({
-              id: cd.candidateId,
-
-              place: {
-                id: cd.place.id,
-                externalId: cd.place.externalId,
-                name: cd.place.name,
-                location: cd.place.address,
-                latitude: Number(cd.place.latitude),
-                longitude: Number(cd.place.longitude),
-                rating: 0,
-                isIndoor: cd.place.isIndoor ?? false,
-              },
-
-              isRepresentative: cd.isRepresentative,
-            })),
-          })),
-        )
+        setCategories(res.categories)
       } catch (e) {
         console.error(e)
         alert('플랜 정보를 불러오지 못했습니다.')
@@ -344,7 +320,10 @@ export default function PlanDetailPage() {
                 handleSelectRepresentative(category.id, candidateId)
               }
               onSearch={() => openSearchPanel(category.id)}
-              onTrigger={() => openTriggerPanel(category.id)}
+              onTrigger={() => {
+                console.log('trigger category.id =', category.id)
+                openTriggerPanel(category.id)
+              }}
               onDelete={() => setDeleteCategoryId(category.id)}
               onDeleteCandidate={candidateId => {
                 const targetCategory = categories.find(cat =>
