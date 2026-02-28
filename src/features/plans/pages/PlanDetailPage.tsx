@@ -195,12 +195,26 @@ export default function PlanDetailPage() {
 
   // 트리거 발생
   const handleTrigger = async (triggerType: TriggerType) => {
-    if (!activeCategory) return
+    if (!activeCategory?.id) {
+      console.error('activeCategory 없음', activeCategory)
+      return
+    }
+
+    if (!plan?.id) {
+      console.error('plan 없음', plan)
+      return
+    }
+
+    console.log('Trigger request = ', {
+      planId: plan.id,
+      categoryId: activeCategory.id,
+      triggerType,
+    })
 
     const res = await createTrigger(plan.id, activeCategory.id, triggerType)
+
     setTriggerId(res.triggerId)
   }
-
   // KEEP 결정
   const handleKeep = async () => {
     if (!triggerId) {

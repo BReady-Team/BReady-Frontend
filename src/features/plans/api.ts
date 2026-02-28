@@ -9,14 +9,18 @@ export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
 
   const data = res.data.data
 
+  console.log('plans response =', data)
+
   return {
-    ...data,
-    items: data.items.map((p: any) => ({
+    pageInfo: data.pageInfo,
+    items: (data.items ?? []).map((p: any) => ({
       id: p.planId,
       title: p.title,
       planDate: p.planDate,
       region: p.region,
-      categories: p.categories ?? [], // 안전 처리
+
+      // categories 없는 경우 방어
+      categories: Array.isArray(p.categories) ? p.categories : [],
     })),
   }
 }
