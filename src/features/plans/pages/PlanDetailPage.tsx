@@ -1,8 +1,7 @@
 import { useParams } from 'react-router-dom'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin } from 'lucide-react'
-import { mockPlans } from '../mock/mockPlans'
 
 import CategoryCard from '../components/CategoryCard'
 import AddCategoryButton from '../components/AddCategoryButton'
@@ -16,31 +15,91 @@ import { deletePlan, deletePlanCategory, deleteCandidate } from '../api'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import type { Place, Category, CategoryType, TriggerType, Candidate } from '@/types/plan'
 import { createCategory } from '@/lib/api/category'
+import { useEffect } from 'react'
+import { fetchPlanDetail } from '../api'
+import type { Plan } from '@/types/plan'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
   const numericPlanId = Number(planId)
 
-  const plan = useMemo(
-    () => mockPlans.find(p => p.id === numericPlanId) ?? mockPlans[0],
-    [numericPlanId],
-  )
+  const navigate = useNavigate()
 
-  const [categories, setCategories] = useState<Category[]>(() => plan.categories)
+  const [plan, setPlan] = useState<Plan | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const [categories, setCategories] = useState<Category[]>([])
   const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null)
   const [activePanel, setActivePanel] = useState<'none' | 'search' | 'trigger'>('none')
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null)
   const [isManageOpen, setIsManageOpen] = useState(false)
   const [triggerId, setTriggerId] = useState<number | null>(null)
+
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
   const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null)
   const [categoryDeleting, setCategoryDeleting] = useState(false)
+
   const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null)
   const [candidateDeleting, setCandidateDeleting] = useState(false)
+
   const activeCategory = categories.find(c => c.id === activeCategoryId) ?? null
 
-  const navigate = useNavigate()
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetchPlanDetail(numericPlanId)
+
+        setPlan({
+          id: res.plan.planId,
+          title: res.plan.title,
+          date: res.plan.planDate,
+          region: res.plan.region,
+          categories: [],
+          createdAt: '',
+          updatedAt: '',
+        })
+
+        setCategories(
+          res.categories.map(c => ({
+            id: c.categoryId,
+            type: c.categoryType,
+            order: c.order,
+            representativeCandidateId: c.representativeCandidateId,
+
+            candidates: c.candidates.map(cd => ({
+              id: cd.candidateId,
+
+              place: {
+                id: cd.place.id,
+                externalId: cd.place.externalId,
+                name: cd.place.name,
+                location: cd.place.address,
+                latitude: Number(cd.place.latitude),
+                longitude: Number(cd.place.longitude),
+                rating: 0,
+                isIndoor: cd.place.isIndoor ?? false,
+              },
+
+              isRepresentative: cd.isRepresentative,
+            })),
+          })),
+        )
+      } catch (e) {
+        console.error(e)
+        alert('플랜 정보를 불러오지 못했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    run()
+  }, [numericPlanId])
+  if (loading || !plan) {
+    return <div className="p-10">불러오는 중...</div>
+  }
+
   const toggleCategory = (id: number) => {
     setExpandedCategoryId(prev => (prev === id ? null : id))
   }
@@ -93,7 +152,7 @@ export default function PlanDetailPage() {
 
   const handleAddPlace = (categoryId: number, place: Place) => {
     const tempCandidate: Candidate = {
-      id: Date.now(), // 임시 candidateId (서버 연동 전)
+      id: Date.now(),
       place,
       isRepresentative: false,
     }
@@ -104,6 +163,7 @@ export default function PlanDetailPage() {
       ),
     )
   }
+
   const handleAddCategory = async (type: CategoryType) => {
     if (!plan) return
 
