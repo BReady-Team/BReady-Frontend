@@ -15,6 +15,7 @@ import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
 import { deletePlan, deletePlanCategory, deleteCandidate } from '../api'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import type { Place, Category, CategoryType, TriggerType, Candidate } from '@/types/plan'
+import { createCategory } from '@/lib/api/category'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -102,6 +103,26 @@ export default function PlanDetailPage() {
         cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, tempCandidate] } : cat,
       ),
     )
+  }
+  const handleAddCategory = async (type: CategoryType) => {
+    if (!plan) return
+
+    try {
+      const res = await createCategory(plan.id, type)
+
+      setCategories(prev => [
+        ...prev,
+        {
+          id: res.planCategoryId,
+          type,
+          order: res.sequence,
+          representativeCandidateId: 0,
+          candidates: [],
+        },
+      ])
+    } catch {
+      alert('카테고리 생성 실패')
+    }
   }
 
   const handleChangeCategory = (newType: CategoryType) => {
@@ -267,7 +288,7 @@ export default function PlanDetailPage() {
             />
           ))}
 
-          <AddCategoryButton onAdd={type => console.log('add category', type)} />
+          <AddCategoryButton onAdd={handleAddCategory} />
         </div>
       </div>
 
