@@ -4,14 +4,21 @@ import type { PlanListResponse, PlanDetailResponse } from './types'
 // 플랜 목록 조회 GET /api/v1/plans
 export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
   const res = await http.get('/api/v1/plans', {
-    params: {
-      page: 0,
-      size: 10,
-      order: 'DESC',
-    },
+    params: { page: 0, size: 10, order: 'DESC' },
   })
 
-  return res.data.data
+  const data = res.data.data
+
+  return {
+    ...data,
+    items: data.items.map((p: any) => ({
+      id: p.planId,
+      title: p.title,
+      planDate: p.planDate,
+      region: p.region,
+      categories: p.categories ?? [], // 안전 처리
+    })),
+  }
 }
 
 // 플랜 상세 조회 GET /api/v1/plans/{planId}
