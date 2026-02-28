@@ -152,7 +152,7 @@ export default function PlanDetailPage() {
 
   const handleAddPlace = (categoryId: number, place: Place) => {
     const tempCandidate: Candidate = {
-      id: Date.now(),
+      id: place.id,
       place,
       isRepresentative: false,
     }
