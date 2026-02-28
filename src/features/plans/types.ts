@@ -1,5 +1,25 @@
 import type { CategoryType } from '@/types/common'
 
+export interface PlanListItemDto {
+  id: number
+  title: string
+  planDate: string
+  region: string
+  categories: PlanCategorySummary[]
+}
+
+export interface PageInfo {
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+export interface PlanListResponse {
+  items: PlanListItemDto[]
+  pageInfo: PageInfo
+}
+
 export interface PlanCategorySummary {
   id: number
   categoryType: CategoryType

@@ -1,13 +1,20 @@
 import { http } from '@/lib/http'
-import type { PlanSummaryDTO, PlanDetailResponse } from './types'
+import type { PlanListResponse, PlanDetailResponse } from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
-export async function fetchPlanSummaries(): Promise<PlanSummaryDTO[]> {
-  const res = await http.get('/api/v1/plans')
+export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
+  const res = await http.get('/api/v1/plans', {
+    params: {
+      page: 0,
+      size: 10,
+      order: 'DESC',
+    },
+  })
+
   return res.data.data
 }
 
-//  플랜 상세 조회 GET /api/v1/plans/{planId}
+// 플랜 상세 조회 GET /api/v1/plans/{planId}
 export async function fetchPlanDetail(planId: number): Promise<PlanDetailResponse> {
   const res = await http.get(`/api/v1/plans/${planId}`)
   return res.data.data
