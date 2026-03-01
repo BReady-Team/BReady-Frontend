@@ -20,16 +20,19 @@ export default function PlanListPage() {
         const data = await fetchPlanSummaries()
         if (cancelled) return
 
-        setPlans(data)
+        console.log('plans response =', data)
+
+        setPlans(data.items ?? [])
       } catch {
         if (cancelled) return
-        setError('플랜 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+        setError('플랜 목록을 불러오지 못했습니다.')
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
 
     run()
+
     return () => {
       cancelled = true
     }

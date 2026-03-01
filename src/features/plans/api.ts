@@ -1,16 +1,63 @@
 import { http } from '@/lib/http'
-import type { PlanSummaryDTO, PlanDetailResponse } from './types'
+import type { PlanListResponse } from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
-export async function fetchPlanSummaries(): Promise<PlanSummaryDTO[]> {
-  const res = await http.get('/api/v1/plans')
-  return res.data.data
+export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
+  const res = await http.get('/api/v1/plans', {
+    params: { page: 0, size: 10, order: 'DESC' },
+  })
+
+  const data = res.data.data
+
+  console.log('plans response =', data)
+
+  return {
+    pageInfo: data.pageInfo,
+    items: (data.items ?? []).map((p: any) => ({
+      id: p.planId,
+      title: p.title,
+      planDate: p.planDate,
+      region: p.region,
+
+      // categories 없는 경우 방어
+      categories: Array.isArray(p.categories) ? p.categories : [],
+    })),
+  }
 }
 
-//  플랜 상세 조회 GET /api/v1/plans/{planId}
-export async function fetchPlanDetail(planId: number): Promise<PlanDetailResponse> {
+// 플랜 상세 조회 GET /api/v1/plans/{planId}
+export async function fetchPlanDetail(planId: number) {
   const res = await http.get(`/api/v1/plans/${planId}`)
-  return res.data.data
+
+  const data = res.data.data
+
+  return {
+    plan: data.plan,
+
+    categories: data.categories.map((c: any) => ({
+      id: c.categoryId,
+      type: c.categoryType,
+      order: c.order,
+      representativeCandidateId: c.representativeCandidateId,
+
+      candidates: c.candidates.map((cd: any) => ({
+        id: cd.candidateId,
+
+        place: {
+          id: cd.place.id,
+          externalId: cd.place.externalId,
+          name: cd.place.name,
+          location: cd.place.address,
+          latitude: cd.place.latitude,
+          longitude: cd.place.longitude,
+          rating: 0,
+          isIndoor: cd.place.isIndoor ?? false,
+        },
+
+        isRepresentative: cd.isRepresentative ?? false,
+      })),
+    })),
+  }
 }
 
 // 플랜 생성 POST /api/v1/plans
