@@ -312,7 +312,7 @@ export default function PlanDetailPage() {
         <div className="space-y-4">
           {categories.map(category => (
             <CategoryCard
-              key={category.id}
+              key={`category-${category.id}`}
               category={category}
               isExpanded={expandedCategoryId === category.id}
               onToggle={() => toggleCategory(category.id)}
