@@ -28,7 +28,7 @@ interface TriggerPanelProps {
   isOpen: boolean
   categoryType: CategoryType
   candidates: Candidate[]
-  representativeCandidateId: number
+  representativeCandidateId: number | null
   onClose: () => void
   onTrigger: (trigger: TriggerType) => Promise<void>
   onKeep: () => Promise<void>

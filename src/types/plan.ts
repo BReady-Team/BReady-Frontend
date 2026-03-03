@@ -23,7 +23,7 @@ export type Category = {
   id: number
   type: CategoryType
   order: number
-  representativeCandidateId: number
+  representativeCandidateId: number | null
   candidates: Candidate[]
 }
 

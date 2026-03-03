@@ -157,7 +157,7 @@ export default function PlanDetailPage() {
           id: res.planCategoryId,
           type,
           order: res.sequence,
-          representativeCandidateId: 0,
+          representativeCandidateId: null,
           candidates: [],
         },
       ])
