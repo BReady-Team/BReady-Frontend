@@ -18,6 +18,7 @@ import { createCategory } from '@/lib/api/category'
 import { useEffect } from 'react'
 import { fetchPlanDetail } from '../api'
 import type { Plan } from '@/types/plan'
+import { updatePlanCategoryType } from '../api'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -166,24 +167,21 @@ export default function PlanDetailPage() {
     }
   }
 
-  const handleChangeCategory = (newType: CategoryType) => {
-    if (!activeCategoryId) return
+  const handleChangeCategory = async (newType: CategoryType) => {
+    if (!plan?.id || !activeCategoryId) return
 
-    setCategories(prev =>
-      prev.map(cat =>
-        cat.id === activeCategoryId
-          ? {
-              ...cat,
-              type: newType,
-              candidates: [],
-              representativeCandidateId: null,
-            }
-          : cat,
-      ),
-    )
+    try {
+      await updatePlanCategoryType(plan.id, activeCategoryId, newType)
+      const res = await fetchPlanDetail(plan.id)
+      setCategories(res.categories)
 
-    closePanel()
+      closePanel()
+    } catch (e) {
+      console.error(e)
+      alert('카테고리 변경 실패')
+    }
   }
+
   // 트리거 발생
   const handleTrigger = async (triggerType: TriggerType) => {
     if (!activeCategory?.id) {
