@@ -83,6 +83,19 @@ export async function deletePlan(planId: number) {
   await http.delete(`/api/v1/plans/${planId}`)
 }
 
+// 카테고리 타입 변경
+export async function updatePlanCategoryType(
+  planId: number,
+  planCategoryId: number,
+  categoryType: string,
+) {
+  const res = await http.patch(`/api/v1/plans/${planId}/categories/${planCategoryId}`, {
+    categoryType,
+  })
+
+  return res.data.data
+}
+
 // 카테고리 삭제
 export async function deletePlanCategory(planId: number, planCategoryId: number) {
   const res = await http.delete(`/api/v1/plans/${planId}/categories/${planCategoryId}`)
