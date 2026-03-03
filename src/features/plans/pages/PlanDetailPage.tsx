@@ -170,10 +170,20 @@ export default function PlanDetailPage() {
     if (!activeCategoryId) return
 
     setCategories(prev =>
-      prev.map(cat => (cat.id === activeCategoryId ? { ...cat, type: newType } : cat)),
+      prev.map(cat =>
+        cat.id === activeCategoryId
+          ? {
+              ...cat,
+              type: newType,
+              candidates: [],
+              representativeCandidateId: null,
+            }
+          : cat,
+      ),
     )
-  }
 
+    closePanel()
+  }
   // 트리거 발생
   const handleTrigger = async (triggerType: TriggerType) => {
     if (!activeCategory?.id) {
