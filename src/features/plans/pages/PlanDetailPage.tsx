@@ -72,6 +72,11 @@ export default function PlanDetailPage() {
 
     run()
   }, [numericPlanId])
+
+  useEffect(() => {
+    console.log('categories state =', categories)
+  }, [categories])
+
   if (loading || !plan) {
     return <div className="p-10">불러오는 중...</div>
   }
@@ -145,7 +150,7 @@ export default function PlanDetailPage() {
 
     try {
       const res = await createCategory(plan.id, type)
-
+      console.log('createCategory response =', res)
       setCategories(prev => [
         ...prev,
         {
