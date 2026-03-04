@@ -55,7 +55,6 @@ export default function PlaceMap({
     const map = mapRef.current
     if (!kakao?.maps || !map) return
 
-    // 내 위치가 없으면 마커 제거
     if (!myLocation) {
       if (myMarkerRef.current) {
         myMarkerRef.current.setMap(null)
@@ -67,10 +66,32 @@ export default function PlaceMap({
     const pos = new kakao.maps.LatLng(myLocation.lat, myLocation.lng)
 
     if (!myMarkerRef.current) {
+      // 현재 위치 마커 이미지
+      const markerImage = new kakao.maps.MarkerImage(
+        'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+        new kakao.maps.Size(24, 35),
+      )
+
       const marker = new kakao.maps.Marker({
         position: pos,
+        image: markerImage,
+        zIndex: 10,
       })
+
       marker.setMap(map)
+
+      // 현재 위치 강조 원
+      const circle = new kakao.maps.Circle({
+        center: pos,
+        radius: 40,
+        strokeWeight: 0,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.25,
+        zIndex: 5,
+      })
+
+      circle.setMap(map)
+
       myMarkerRef.current = marker
     } else {
       myMarkerRef.current.setPosition(pos)
