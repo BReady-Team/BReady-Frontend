@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react'
 
-declare global {
-  interface Window {
-    kakao?: unknown
-  }
-}
-
 export function useKakaoMapLoader(appKey?: string) {
   const [ready, setReady] = useState(false)
 
