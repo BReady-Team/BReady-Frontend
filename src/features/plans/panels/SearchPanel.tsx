@@ -1,14 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X, Search, MapPin, Star, Plus, Sparkles } from 'lucide-react'
-
 import type { Place } from '@/types/plan'
 import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
-
 import { cn } from '@/lib/utils'
-import { mockSearchResults } from '../mock/mockPlans'
-
 import { createCandidate, searchPlaces, type CreateCandidateRequest } from '@/lib/api/place'
 import { getCurrentLocation } from '@/lib/geolocation'
+import { useKakaoMapLoader } from '@/lib/kakao/useKakaoMapLoader'
+import PlaceMap, { type MapPlaceMarker } from '../components/PlaceMap'
 
 interface SearchPanelProps {
   planId: number
@@ -29,27 +27,40 @@ export default function SearchPanel({
   const [results, setResults] = useState<Place[]>([])
   const [isFetching, setIsFetching] = useState(false)
   const [isAiLoading, setIsAiLoading] = useState(false)
+  const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
+  const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
+
+  // 패널 열릴 때 현재 위치 한번 받아오기 (권한 거부면 null 유지)
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const pos = await getCurrentLocation()
+        if (!mounted) return
+        setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+      } catch (err) {
+        console.warn('위치 정보를 가져오지 못했습니다.', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
 
     setIsFetching(true)
+    setFocusPlaceId(null)
 
     try {
-      let lat: number | undefined
-      let lng: number | undefined
-
-      try {
-        const position = await getCurrentLocation()
-        lat = position.coords.latitude
-        lng = position.coords.longitude
-      } catch {
-        console.warn('위치 권한 거부 → 위치 없이 검색')
-      }
+      const lat = myLocation?.lat
+      const lng = myLocation?.lng
 
       const data = await searchPlaces(categoryType, query, lat, lng)
 
-      const mapped: Place[] = data.map((p: PlaceSearchResponse) => ({
+      const mapped: Place[] = (data ?? []).map((p: PlaceSearchResponse) => ({
         id: Number(p.externalId.replace('kakao-', '')),
         externalId: p.externalId,
         name: p.name,
@@ -66,6 +77,19 @@ export default function SearchPanel({
       setIsFetching(false)
     }
   }
+
+  const markerPlaces: MapPlaceMarker[] = useMemo(
+    () =>
+      results
+        .filter(p => typeof p.latitude === 'number' && typeof p.longitude === 'number')
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          lat: p.latitude!,
+          lng: p.longitude!,
+        })),
+    [results],
+  )
 
   const handleAdd = async (place: Place) => {
     const body: CreateCandidateRequest = {
@@ -97,12 +121,11 @@ export default function SearchPanel({
 
   const handleRecommend = () => {
     setIsAiLoading(true)
-
     setTimeout(() => {
-      setResults(mockSearchResults)
       setIsAiLoading(false)
     }, 500)
   }
+
   return (
     <>
       <div
@@ -127,7 +150,30 @@ export default function SearchPanel({
         <div className="p-6 space-y-6">
           <p className="text-sm text-muted-foreground">후보 장소에 추가할 곳을 찾아보세요</p>
 
-          {/* 검색 폼 */}
+          {/* 지도 */}
+          <div className="space-y-2">
+            {!mapReady && (
+              <div className="h-[220px] rounded-lg border border-border/50 flex items-center justify-center text-sm text-muted-foreground">
+                지도 불러오는 중...
+              </div>
+            )}
+
+            {mapReady && (
+              <PlaceMap
+                center={myLocation}
+                myLocation={myLocation}
+                places={markerPlaces}
+                focusPlaceId={focusPlaceId}
+                onMarkerClick={id => setFocusPlaceId(id)}
+              />
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            현재 위치 마커 + 검색 결과 마커가 지도에 표시됩니다.
+          </p>
+
+          {/* 검색 */}
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -142,6 +188,7 @@ export default function SearchPanel({
                 )}
               />
             </div>
+
             <button className="h-10 px-4 rounded-md border border-border/50 text-sm hover:bg-secondary">
               검색
             </button>
@@ -171,16 +218,19 @@ export default function SearchPanel({
 
               {results.map(place => (
                 <div
-                  key={place.id}
+                  key={place.externalId ?? place.id}
                   className="flex items-center justify-between rounded-lg border border-border/50 p-3 hover:bg-secondary/40"
+                  onClick={() => setFocusPlaceId(place.id)}
                 >
                   <div>
                     <p className="text-sm font-medium">{place.name}</p>
+
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         {place.location}
                       </span>
+
                       <span className="flex items-center gap-1 text-amber-500">
                         <Star className="h-3 w-3 fill-current" />
                         {place.rating}
@@ -189,7 +239,10 @@ export default function SearchPanel({
                   </div>
 
                   <button
-                    onClick={() => handleAdd(place)}
+                    onClick={e => {
+                      e.stopPropagation()
+                      handleAdd(place)
+                    }}
                     className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
                   >
                     <Plus className="h-4 w-4" />
