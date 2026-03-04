@@ -28,19 +28,18 @@ export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
 // 플랜 상세 조회 GET /api/v1/plans/{planId}
 export async function fetchPlanDetail(planId: number) {
   const res = await http.get(`/api/v1/plans/${planId}`)
-
   const data = res.data.data
 
   return {
     plan: data.plan,
 
     categories: data.categories.map((c: any) => ({
-      id: c.categoryId,
+      id: c.planCategoryId,
       type: c.categoryType,
-      order: c.order,
+      order: c.sequence,
       representativeCandidateId: c.representativeCandidateId,
 
-      candidates: c.candidates.map((cd: any) => ({
+      candidates: (c.candidates ?? []).map((cd: any) => ({
         id: cd.candidateId,
 
         place: {
@@ -82,6 +81,19 @@ export async function updatePlan(
 // 플랜 삭제 DELETE /api/v1/plans/{planId}
 export async function deletePlan(planId: number) {
   await http.delete(`/api/v1/plans/${planId}`)
+}
+
+// 카테고리 타입 변경
+export async function updatePlanCategoryType(
+  planId: number,
+  planCategoryId: number,
+  categoryType: string,
+) {
+  const res = await http.patch(`/api/v1/plans/${planId}/categories/${planCategoryId}`, {
+    categoryType,
+  })
+
+  return res.data.data
 }
 
 // 카테고리 삭제

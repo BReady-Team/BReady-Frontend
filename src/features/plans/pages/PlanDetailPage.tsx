@@ -18,6 +18,7 @@ import { createCategory } from '@/lib/api/category'
 import { useEffect } from 'react'
 import { fetchPlanDetail } from '../api'
 import type { Plan } from '@/types/plan'
+import { updatePlanCategoryType } from '../api'
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -72,6 +73,11 @@ export default function PlanDetailPage() {
 
     run()
   }, [numericPlanId])
+
+  useEffect(() => {
+    console.log('categories state =', categories)
+  }, [categories])
+
   if (loading || !plan) {
     return <div className="p-10">불러오는 중...</div>
   }
@@ -145,14 +151,14 @@ export default function PlanDetailPage() {
 
     try {
       const res = await createCategory(plan.id, type)
-
+      console.log('createCategory response =', res)
       setCategories(prev => [
         ...prev,
         {
           id: res.planCategoryId,
           type,
           order: res.sequence,
-          representativeCandidateId: 0,
+          representativeCandidateId: null,
           candidates: [],
         },
       ])
@@ -161,12 +167,19 @@ export default function PlanDetailPage() {
     }
   }
 
-  const handleChangeCategory = (newType: CategoryType) => {
-    if (!activeCategoryId) return
+  const handleChangeCategory = async (newType: CategoryType) => {
+    if (!plan?.id || !activeCategoryId) return
 
-    setCategories(prev =>
-      prev.map(cat => (cat.id === activeCategoryId ? { ...cat, type: newType } : cat)),
-    )
+    try {
+      await updatePlanCategoryType(plan.id, activeCategoryId, newType)
+      const res = await fetchPlanDetail(plan.id)
+      setCategories(res.categories)
+
+      closePanel()
+    } catch (e) {
+      console.error(e)
+      alert('카테고리 변경 실패')
+    }
   }
 
   // 트리거 발생
@@ -312,7 +325,7 @@ export default function PlanDetailPage() {
         <div className="space-y-4">
           {categories.map(category => (
             <CategoryCard
-              key={category.id}
+              key={`category-${category.id}`}
               category={category}
               isExpanded={expandedCategoryId === category.id}
               onToggle={() => toggleCategory(category.id)}
