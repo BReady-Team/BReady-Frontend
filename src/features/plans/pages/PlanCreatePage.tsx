@@ -69,6 +69,7 @@ export default function PlanCreatePage() {
     try {
       setSaving(true)
       setError(null)
+
       const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 
       if (isEditMode) {
@@ -77,17 +78,22 @@ export default function PlanCreatePage() {
           planDate: formattedDate,
           region,
         })
+
         navigate(`/plans/${numericPlanId}`)
       } else {
-        await createPlan({
+        const res = await createPlan({
           title,
           planDate: formattedDate,
           region,
         })
-        navigate('/plans')
+
+        // 생성된 플랜 상세로 이동
+        navigate(`/plans/${res.planId}`)
       }
-    } catch {
-      setError(isEditMode ? '수정 실패' : '생성 실패')
+    } catch (e) {
+      console.error(e)
+
+      setError(isEditMode ? '플랜 수정 실패' : '플랜 생성 실패')
     } finally {
       setSaving(false)
     }

@@ -2,11 +2,11 @@ import type { PlanCategorySummary } from '../types'
 import { CATEGORY_LABEL } from '@/types/common'
 
 interface Props {
-  categories: PlanCategorySummary[]
+  categories?: PlanCategorySummary[]
 }
 
 export function PlanCategoryChips({ categories }: Props) {
-  const sorted = [...categories].sort((a, b) => a.sequence - b.sequence)
+  const sorted = (categories ?? []).slice().sort((a, b) => a.sequence - b.sequence)
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2">
