@@ -33,3 +33,24 @@ export async function fetchMyPage(): Promise<MyPageDTO> {
     recentPlans: [],
   }
 }
+
+export async function updateNickname(nickname: string) {
+  await http.patch('/api/v1/users/profile/nickname', { nickname })
+}
+
+export async function updateBio(bio: string) {
+  await http.patch('/api/v1/users/profile/bio', { bio })
+}
+
+export async function updateProfileImage(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await http.patch('/api/v1/users/profile/image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+
+  return res.data.data
+}
