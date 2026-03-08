@@ -3,7 +3,7 @@ import { Calendar, RefreshCw, BarChart3, Clock } from 'lucide-react'
 interface Props {
   totalPlans: number
   totalSwitches: number
-  avgSwitchesPerPlan: string
+  avgSwitchesPerPlan: number
   recentCount: number
 }
 
@@ -16,7 +16,7 @@ export default function StatsSummaryCard({
   const cards = [
     { label: '총 플랜', value: totalPlans, icon: Calendar },
     { label: '총 전환 횟수', value: totalSwitches, icon: RefreshCw },
-    { label: '플랜당 평균 전환', value: avgSwitchesPerPlan, icon: BarChart3 },
+    { label: '플랜당 평균 전환', value: avgSwitchesPerPlan.toFixed(1), icon: BarChart3 },
     { label: '최근 기록', value: recentCount, icon: Clock },
   ]
 
