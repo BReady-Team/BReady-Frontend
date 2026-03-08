@@ -1,6 +1,7 @@
 import { http } from '@/lib/http'
 import type { MyPageDTO } from './types'
 import { getStatsSummary } from '@/lib/api/stats'
+import { getMyPlans } from '@/features/plans/api'
 
 interface CommonResponse<T> {
   message: string
@@ -8,9 +9,10 @@ interface CommonResponse<T> {
 }
 
 export async function fetchMyPage(): Promise<MyPageDTO> {
-  const [userRes, stats] = await Promise.all([
+  const [userRes, stats, plansRes] = await Promise.all([
     http.get<CommonResponse<any>>('/api/v1/users/me'),
     getStatsSummary('ALL'),
+    getMyPlans(0, 3),
   ])
 
   const data = userRes.data.data
@@ -30,7 +32,12 @@ export async function fetchMyPage(): Promise<MyPageDTO> {
       totalSwitchLogs: stats.recentCount,
     },
 
-    recentPlans: [],
+    recentPlans: plansRes.items.map((p: any) => ({
+      id: p.planId,
+      title: p.title,
+      date: p.planDate,
+      region: p.region,
+    })),
   }
 }
 
