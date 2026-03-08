@@ -1,33 +1,29 @@
-import type { PlanStats } from '../types/statsTypes'
+import { Activity } from 'lucide-react'
 import type { TriggerType } from '@/types/plan'
 import { triggerUiMap } from '../constants/triggerUi'
-import { Activity } from 'lucide-react'
+import type { TriggerStatsItem } from '../types/statsTypes'
 
 interface Props {
-  stats: PlanStats[]
+  items: TriggerStatsItem[]
+  totalCount: number
 }
 
-export default function TriggerAnalysis({ stats }: Props) {
-  /* 트리거 집계 */
-  const counts = stats.reduce<Record<TriggerType, number>>(
-    (acc, stat) => {
-      Object.entries(stat.triggerCounts).forEach(([key, value]) => {
-        acc[key as TriggerType] = (acc[key as TriggerType] ?? 0) + value
-      })
-      return acc
-    },
-    {} as Record<TriggerType, number>,
-  )
+export default function TriggerAnalysis({ items, totalCount }: Props) {
+  const entryMap = new Map(items.map(item => [item.triggerType, item]))
 
   const entries = (Object.keys(triggerUiMap) as TriggerType[])
-    .map(type => ({
-      type,
-      count: counts[type] ?? 0,
-    }))
+    .map(type => {
+      const found = entryMap.get(type)
+
+      return {
+        type,
+        count: found?.count ?? 0,
+        percentage: found?.percentage ?? 0,
+      }
+    })
     .sort((a, b) => b.count - a.count)
 
   const maxCount = Math.max(...entries.map(e => e.count), 1)
-  const totalCount = entries.reduce((acc, e) => acc + e.count, 0)
 
   return (
     <div className="lg:col-span-3 rounded-2xl border border-border/50 bg-card">
@@ -36,7 +32,7 @@ export default function TriggerAnalysis({ stats }: Props) {
         <p className="mt-1 text-sm text-muted-foreground">상황별 발생 빈도</p>
       </div>
 
-      <div className="p-6 space-y-5">
+      <div className="space-y-5 p-6">
         {totalCount === 0 && (
           <div className="py-8 text-center text-muted-foreground">
             <Activity className="mx-auto mb-2 h-8 w-8" />
@@ -46,7 +42,6 @@ export default function TriggerAnalysis({ stats }: Props) {
 
         {entries.map((entry, index) => {
           const ui = triggerUiMap[entry.type]
-          const percentage = totalCount > 0 ? Math.round((entry.count / totalCount) * 100) : 0
 
           return (
             <div key={entry.type} className="space-y-2">
@@ -71,11 +66,11 @@ export default function TriggerAnalysis({ stats }: Props) {
 
                 <div className="text-right">
                   <span className="text-sm font-medium">{entry.count}회</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{percentage}%</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{entry.percentage}%</span>
                 </div>
               </div>
 
-              <div className="h-2 rounded-full bg-secondary overflow-hidden">
+              <div className="h-2 overflow-hidden rounded-full bg-secondary">
                 <div
                   className="h-full rounded-full bg-primary transition-all duration-500"
                   style={{

@@ -1,8 +1,11 @@
-import type { Plan } from '@/types/plan'
-import type { PlanStats } from '../types/statsTypes'
 import { Link } from 'react-router-dom'
+import type { PlanStatsItem } from '../types/statsTypes'
 
-export default function PlanStatsList({ plans, stats }: { plans: Plan[]; stats: PlanStats[] }) {
+interface Props {
+  items: PlanStatsItem[]
+}
+
+export default function PlanStatsList({ items }: Props) {
   return (
     <div className="mt-8 rounded-2xl border border-border/50 bg-card">
       <div className="border-b p-6">
@@ -11,19 +14,20 @@ export default function PlanStatsList({ plans, stats }: { plans: Plan[]; stats: 
       </div>
 
       <div className="divide-y">
-        {plans.map(plan => {
-          const stat = stats.find(s => s.planId === plan.id)
-          return (
-            <Link
-              key={plan.id}
-              to={`/plans/${plan.id}`}
-              className="flex justify-between p-4 hover:bg-secondary/30"
-            >
-              <span>{plan.title}</span>
-              <span className="text-sm text-muted-foreground">{stat?.totalSwitches ?? 0}회</span>
-            </Link>
-          )
-        })}
+        {items.length === 0 && (
+          <div className="p-6 text-sm text-muted-foreground">표시할 플랜 통계가 없습니다.</div>
+        )}
+
+        {items.map(item => (
+          <Link
+            key={item.planId}
+            to={`/plans/${item.planId}`}
+            className="flex justify-between p-4 hover:bg-secondary/30"
+          >
+            <span>{item.planTitle}</span>
+            <span className="text-sm text-muted-foreground">{item.totalSwitches}회</span>
+          </Link>
+        ))}
       </div>
     </div>
   )
