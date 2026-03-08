@@ -19,6 +19,7 @@ import {
   User,
   X,
 } from 'lucide-react'
+import { updateNickname, updateBio, updateProfileImage } from '../api'
 
 function formatKoreanDate(isoOrYmd: string) {
   const d = new Date(isoOrYmd.includes('T') ? isoOrYmd : `${isoOrYmd}T00:00:00`)
@@ -125,13 +126,32 @@ export default function MyPage() {
     fileRef.current?.click()
   }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) return
 
-    if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl)
-    setAvatarPreviewUrl(URL.createObjectURL(file))
+    try {
+      const url = await updateProfileImage(file)
+
+      if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl)
+
+      setAvatarPreviewUrl(url)
+
+      setData(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            avatarUrl: url,
+          },
+        }
+      })
+    } catch {
+      alert('프로필 이미지 업로드 실패')
+    }
+
     e.target.value = ''
   }
 
@@ -146,15 +166,22 @@ export default function MyPage() {
     setIsEditingNickname(false)
   }
 
-  const saveNicknameEdit = () => {
+  const saveNicknameEdit = async () => {
     const next = nicknameDraft.trim()
     if (!next) return
 
-    setData(prev => {
-      if (!prev) return prev
-      return { ...prev, profile: { ...prev.profile, nickname: next } }
-    })
-    setIsEditingNickname(false)
+    try {
+      await updateNickname(next)
+
+      setData(prev => {
+        if (!prev) return prev
+        return { ...prev, profile: { ...prev.profile, nickname: next } }
+      })
+
+      setIsEditingNickname(false)
+    } catch {
+      alert('닉네임 수정 실패')
+    }
   }
 
   const startBioEdit = () => {
@@ -168,13 +195,21 @@ export default function MyPage() {
     setIsEditingBio(false)
   }
 
-  const saveBioEdit = () => {
+  const saveBioEdit = async () => {
     const next = bioDraft.trim()
-    setData(prev => {
-      if (!prev) return prev
-      return { ...prev, profile: { ...prev.profile, bio: next } }
-    })
-    setIsEditingBio(false)
+
+    try {
+      await updateBio(next)
+
+      setData(prev => {
+        if (!prev) return prev
+        return { ...prev, profile: { ...prev.profile, bio: next } }
+      })
+
+      setIsEditingBio(false)
+    } catch {
+      alert('소개 수정 실패')
+    }
   }
 
   const handleLogout = () => {

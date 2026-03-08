@@ -13,8 +13,16 @@ import {
 } from 'lucide-react'
 
 import type { CategoryType, TriggerType, Candidate } from '@/types/plan'
-import { categoryLabels, triggerLabels, mockSearchResults } from '../mock/mockPlans'
 import { cn } from '@/lib/utils'
+
+const categoryLabels: Record<CategoryType, { label: string }> = {
+  MEAL: { label: '식사' },
+  CAFE: { label: '카페' },
+  EXHIBITION: { label: '전시' },
+  WALK: { label: '산책' },
+  SHOPPING: { label: '쇼핑' },
+  REST: { label: '휴식' },
+}
 
 const triggerIcons: Record<TriggerType, React.ElementType> = {
   WEATHER_BAD: CloudRain,
@@ -23,6 +31,16 @@ const triggerIcons: Record<TriggerType, React.ElementType> = {
   FATIGUE: Battery,
   DISTANCE_TOO_FAR: MapPin,
 }
+
+const triggerLabels: Record<TriggerType, string> = {
+  WEATHER_BAD: '날씨가 좋지 않음',
+  WAITING_TOO_LONG: '대기 시간이 너무 김',
+  PLACE_CLOSED: '장소가 영업하지 않음',
+  FATIGUE: '피로함',
+  DISTANCE_TOO_FAR: '거리가 너무 멂',
+}
+
+const mockSearchResults: any[] = []
 
 interface TriggerPanelProps {
   isOpen: boolean
