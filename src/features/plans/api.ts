@@ -78,6 +78,19 @@ export async function updatePlan(
   return res.data.data
 }
 
+// 내 플랜 목록 조회 GET /api/v1/plans (최근 3개만)
+export async function getMyPlans(page = 0, size = 3) {
+  const res = await http.get('/api/v1/plans', {
+    params: {
+      page,
+      size,
+      order: 'DESC',
+    },
+  })
+
+  return res.data.data
+}
+
 // 플랜 삭제 DELETE /api/v1/plans/{planId}
 export async function deletePlan(planId: number) {
   await http.delete(`/api/v1/plans/${planId}`)
