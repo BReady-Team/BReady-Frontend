@@ -51,10 +51,15 @@ export default function LoginPage() {
   }
 
   const handleSocialLogin = (provider: 'KAKAO' | 'NAVER') => {
-    const url =
-      provider === 'KAKAO'
-      ? import.meta.env.VITE_KAKAO_AUTH_URL
-      : import.meta.env.VITE_NAVER_AUTH_URL
+    const kakaoUrl = import.meta.env.VITE_KAKAO_LOGIN_URL
+    const naverUrl = import.meta.env.VITE_NAVER_LOGIN_URL
+
+    const url = provider === 'KAKAO' ? kakaoUrl : naverUrl
+
+    if (!url) {
+      alert(`${provider} 로그인 URL이 설정되지 않았습니다.`)
+      return
+    }
 
     window.location.href = url
   }
