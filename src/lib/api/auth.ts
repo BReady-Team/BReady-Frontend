@@ -1,4 +1,5 @@
 import { http } from '@/lib/http'
+import type { SocialLoginResponse } from '@/features/auth/types'
 
 export interface SignupRequest {
   nickname: string
@@ -27,9 +28,15 @@ export const loginApi = (payload: LoginRequest) => {
 }
 
 export const kakaoLoginApi = (code: string) => {
-  return http.post('/api/v1/auth/kakao/login', { code })
+  return http.post<{
+    data: SocialLoginResponse
+  }>('/api/v1/auth/kakao/login', { code })
 }
 
 export const naverLoginApi = (code: string, state: string) => {
-  return http.post('/api/v1/auth/naver/login', { code, state })
-}
+  return http.post<{
+    data: SocialLoginResponse
+  }>('/api/v1/auth/naver/login', {
+    code,
+    state,  
+})}
