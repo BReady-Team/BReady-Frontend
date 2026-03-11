@@ -25,3 +25,11 @@ export const loginApi = (payload: LoginRequest) => {
     data: TokenResponse
   }>('/api/v1/auth/login', payload)
 }
+
+export const kakaoLoginApi = (code: string) => {
+  return http.post('/api/v1/auth/kakao/login', { code })
+}
+
+export const naverLoginApi = (code: string, state: string) => {
+  return http.post('/api/v1/auth/naver/login', { code, state })
+}
