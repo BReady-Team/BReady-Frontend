@@ -51,22 +51,12 @@ export default function LoginPage() {
   }
 
   const handleSocialLogin = (provider: 'KAKAO' | 'NAVER') => {
-    setIsLoading(true)
+    const url =
+      provider === 'KAKAO'
+      ? import.meta.env.VITE_KAKAO_AUTH_URL
+      : import.meta.env.VITE_NAVER_AUTH_URL
 
-    setTimeout(() => {
-      login({
-        accessToken: `${provider.toLowerCase()}-mock-access-token`,
-        refreshToken: `${provider.toLowerCase()}-mock-refresh-token`,
-        user: {
-          id: 2,
-          email: `${provider.toLowerCase()}@bready.dev`,
-          nickname: provider === 'KAKAO' ? '카카오유저' : '네이버유저',
-        },
-      })
-
-      navigate('/plans')
-      setIsLoading(false)
-    }, 500)
+    window.location.href = url
   }
 
   return (
