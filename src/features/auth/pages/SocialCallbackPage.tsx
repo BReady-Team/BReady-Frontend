@@ -23,10 +23,17 @@ export default function SocialCallbackPage({ provider }: Props) {
       return
     }
 
+    if (provider === 'NAVER' && !state) {
+      navigate('/login')
+      return
+    }
+
     const run = async () => {
       try {
         const res =
-          provider === 'KAKAO' ? await kakaoLoginApi(code) : await naverLoginApi(code, state!)
+          provider === 'KAKAO'
+            ? await kakaoLoginApi(code)
+            : await naverLoginApi(code, state as string)
 
         const { accessToken, refreshToken, user } = res.data.data
 
