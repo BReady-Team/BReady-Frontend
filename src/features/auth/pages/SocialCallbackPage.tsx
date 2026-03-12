@@ -59,7 +59,11 @@ export default function SocialCallbackPage({ provider }: Props) {
   }, [params, navigate, login, provider])
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+    <div
+      className="flex flex-col items-center justify-center h-screen bg-black text-white"
+      role="status"
+      aria-live="polite"
+    >
       <div className="animate-spin rounded-full h-10 w-10 border-4 border-white border-t-transparent mb-4"></div>
       <p className="text-sm opacity-80">
         {provider === 'KAKAO' ? '카카오 로그인 처리 중...' : '네이버 로그인 처리 중...'}
