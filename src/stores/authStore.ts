@@ -5,6 +5,8 @@ export interface AuthUser {
   id?: number
   email: string
   nickname?: string
+  joinedAt?: string
+  profileImageUrl?: string
 }
 
 interface AuthState {
