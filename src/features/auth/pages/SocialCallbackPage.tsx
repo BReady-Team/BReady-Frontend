@@ -49,9 +49,9 @@ export default function SocialCallbackPage({ provider }: Props) {
           },
         })
 
-        navigate('/plans')
+        navigate('/plans', { replace: true })
       } catch {
-        navigate('/login')
+        navigate('/login', { replace: true })
       }
     }
 
