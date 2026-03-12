@@ -51,22 +51,17 @@ export default function LoginPage() {
   }
 
   const handleSocialLogin = (provider: 'KAKAO' | 'NAVER') => {
-    setIsLoading(true)
+    const kakaoUrl = import.meta.env.VITE_KAKAO_LOGIN_URL
+    const naverUrl = import.meta.env.VITE_NAVER_LOGIN_URL
 
-    setTimeout(() => {
-      login({
-        accessToken: `${provider.toLowerCase()}-mock-access-token`,
-        refreshToken: `${provider.toLowerCase()}-mock-refresh-token`,
-        user: {
-          id: 2,
-          email: `${provider.toLowerCase()}@bready.dev`,
-          nickname: provider === 'KAKAO' ? '카카오유저' : '네이버유저',
-        },
-      })
+    const url = provider === 'KAKAO' ? kakaoUrl : naverUrl
 
-      navigate('/plans')
-      setIsLoading(false)
-    }, 500)
+    if (!url) {
+      alert(`${provider} 로그인 URL이 설정되지 않았습니다.`)
+      return
+    }
+
+    window.location.href = url
   }
 
   return (
