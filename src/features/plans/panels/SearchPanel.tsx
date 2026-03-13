@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Search, MapPin, Star, Plus, Sparkles } from 'lucide-react'
+import { X, Search, MapPin, Star, Plus } from 'lucide-react'
 import type { Place } from '@/types/plan'
 import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
 import { cn } from '@/lib/utils'
@@ -26,7 +26,6 @@ export default function SearchPanel({
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Place[]>([])
   const [isFetching, setIsFetching] = useState(false)
-  const [isAiLoading, setIsAiLoading] = useState(false)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
   const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
@@ -119,13 +118,6 @@ export default function SearchPanel({
     onAddPlace(savedPlace)
   }
 
-  const handleRecommend = () => {
-    setIsAiLoading(true)
-    setTimeout(() => {
-      setIsAiLoading(false)
-    }, 500)
-  }
-
   return (
     <>
       <div
@@ -194,22 +186,7 @@ export default function SearchPanel({
             </button>
           </form>
 
-          {/* AI 추천 */}
-          <button
-            onClick={handleRecommend}
-            disabled={isAiLoading}
-            className={cn(
-              'flex w-full items-center justify-center gap-2',
-              'h-12 rounded-lg text-sm font-medium',
-              'bg-primary/10 text-primary border border-primary/20',
-              'hover:bg-primary/20 transition-colors',
-            )}
-          >
-            <Sparkles className="h-4 w-4" />
-            {isAiLoading ? '추천 중...' : 'AI 추천받기'}
-          </button>
-
-          {(isFetching || isAiLoading) && <p className="text-sm">불러오는 중...</p>}
+          {isFetching && <p className="text-sm">불러오는 중...</p>}
 
           {/* 검색 결과 */}
           {results.length > 0 && (
