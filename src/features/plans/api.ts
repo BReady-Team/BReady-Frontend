@@ -120,3 +120,35 @@ export async function deleteCandidate(candidateId: number) {
   const res = await http.delete(`/api/v1/places/candidates/${candidateId}`)
   return res.data.data
 }
+
+// 장소 추천
+export async function recommendPlace(
+  query: {
+    region: string
+    latitude: number
+    longitude: number
+    radius: number
+    size: number
+  },
+  body: {
+    planId: number
+    categoryId: number
+    triggerId: number
+  },
+): Promise<
+  Array<{
+    externalId: string
+    name: string
+    address: string
+    latitude: number
+    longitude: number
+    isIndoor: boolean
+    distance: number
+    reason: string
+  }>
+> {
+  const res = await http.post('/api/v1/recommendations/places', body, {
+    params: query,
+  })
+  return res.data.data.items ?? []
+}
