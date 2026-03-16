@@ -197,7 +197,10 @@ export default function TriggerPanel({
             <TriggerCategoryStep
               categoryType={categoryType}
               busy={busy}
+              isAiLoading={isAiLoading}
+              recommendReason={undefined}
               onChangeCategory={handleChangeCategory}
+              onRecommendClick={handleRecommend}
             />
           )}
 
