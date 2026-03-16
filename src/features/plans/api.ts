@@ -166,3 +166,14 @@ export async function recommendPlace(
   })
   return res.data.data.items ?? []
 }
+
+// 카테고리 추천
+export async function recommendCategory(body: { triggerId: number }): Promise<{
+  items: Array<{
+    categoryType: string
+    reason: string
+  }>
+}> {
+  const res = await http.post('/api/v1/recommendations/categories', body)
+  return res.data.data
+}

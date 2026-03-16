@@ -15,6 +15,7 @@ interface TriggerCategoryStepProps {
   categoryType: CategoryType
   busy: boolean
   isAiLoading: boolean
+  recommendCategory?: CategoryType
   recommendReason?: string
   onChangeCategory: (type: CategoryType) => void
   onRecommendClick: () => void
@@ -24,6 +25,7 @@ export default function TriggerCategoryStep({
   categoryType,
   busy,
   isAiLoading,
+  recommendCategory,
   recommendReason,
   onChangeCategory,
   onRecommendClick,
@@ -63,13 +65,30 @@ export default function TriggerCategoryStep({
       </button>
 
       {!isAiLoading && recommendReason == null && (
-        <p className="text-sm text-muted-foreground">AI 추천 버튼을 눌러 추천 장소를 받아오세요.</p>
+        <p className="text-sm text-muted-foreground">
+          AI 추천 버튼을 눌러 추천 카테고리를 받아오세요.
+        </p>
       )}
 
-      {recommendReason && (
-        <div className="mt-2 rounded-lg border border-border/50 bg-secondary/30 p-3 text-sm">
-          <p className="text-xs text-muted-foreground">추천 이유</p>
-          <p className="text-sm">{recommendReason}</p>
+      {recommendCategory && recommendReason && (
+        <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <span className="text-sm text-muted-foreground">AI 추천 활동</span>
+          </div>
+
+          <div className="mb-3 rounded-lg bg-background px-4 py-3 text-center border border-border/50">
+            <p className="text-lg font-semibold text-primary">
+              {categoryLabels[recommendCategory].label}
+            </p>
+          </div>
+
+          {recommendReason && (
+            <div className="rounded-lg bg-secondary/40 px-3 py-2">
+              <p className="text-xs text-muted-foreground mb-1">추천 이유</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{recommendReason}</p>
+            </div>
+          )}
         </div>
       )}
     </div>

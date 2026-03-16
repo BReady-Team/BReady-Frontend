@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, ArrowLeft } from 'lucide-react'
 
 import type { CategoryType, TriggerType, Candidate } from '@/types/plan'
-import { recommendPlace } from '@/features/plans/api'
+import { recommendCategory, recommendPlace } from '@/features/plans/api'
 
 import TriggerSelectStep from './TriggerSelectStep'
 import TriggerDecisionStep from './TriggerDecisionStep'
@@ -57,6 +57,11 @@ export default function TriggerPanel({
     }>
   >([])
 
+  const [recommendReason, setRecommendReason] = useState<string | undefined>(undefined)
+  const [recommendedCategory, setRecommendedCategory] = useState<CategoryType | undefined>(
+    undefined,
+  )
+
   if (!isOpen) return null
 
   const resetAndClose = () => {
@@ -67,6 +72,8 @@ export default function TriggerPanel({
     setTriggerId(null)
     setIsAiLoading(false)
     setRecommendedPlaces([])
+    setRecommendReason(undefined)
+    setRecommendedCategory(undefined)
     onClose()
   }
 
@@ -80,6 +87,8 @@ export default function TriggerPanel({
       setSelectedTrigger(trigger)
 
       setRecommendedPlaces([])
+      setRecommendReason(undefined)
+      setRecommendedCategory(undefined)
 
       setStep('decision')
     } finally {
@@ -112,7 +121,7 @@ export default function TriggerPanel({
     }
   }
 
-  const handleRecommend = async () => {
+  const handleRecommendPlace = async () => {
     if (!triggerId) return
 
     const currentCandidate = candidates.find(c => c.id === representativeCandidateId)
@@ -125,6 +134,8 @@ export default function TriggerPanel({
 
     try {
       setIsAiLoading(true)
+      setRecommendReason(undefined)
+      setRecommendedCategory(undefined)
 
       const items = await recommendPlace(
         {
@@ -138,6 +149,23 @@ export default function TriggerPanel({
       )
 
       setRecommendedPlaces(items)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
+  const handleRecommendCategory = async () => {
+    if (!triggerId) return
+
+    try {
+      setIsAiLoading(true)
+      setRecommendReason(undefined)
+
+      const result = await recommendCategory({ triggerId })
+      const first = result.items?.[0]
+
+      setRecommendReason(first?.reason)
+      setRecommendedCategory(first?.categoryType as CategoryType | undefined)
     } finally {
       setIsAiLoading(false)
     }
@@ -198,9 +226,10 @@ export default function TriggerPanel({
               categoryType={categoryType}
               busy={busy}
               isAiLoading={isAiLoading}
-              recommendReason={undefined}
+              recommendCategory={recommendedCategory}
+              recommendReason={recommendReason}
               onChangeCategory={handleChangeCategory}
-              onRecommendClick={handleRecommend}
+              onRecommendClick={handleRecommendCategory}
             />
           )}
 
@@ -214,7 +243,7 @@ export default function TriggerPanel({
               onSwitchPlace={handleSwitchPlace}
               recommendedPlaces={recommendedPlaces}
               isAiLoading={isAiLoading}
-              onRecommendClick={handleRecommend}
+              onRecommendClick={handleRecommendPlace}
             />
           )}
         </div>
