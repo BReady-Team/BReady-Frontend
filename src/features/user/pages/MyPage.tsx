@@ -198,6 +198,11 @@ export default function MyPage() {
   const saveBioEdit = async () => {
     const next = bioDraft.trim()
 
+    if (next.length > 255) {
+      alert('소개는 255자까지 입력할 수 있습니다.')
+      return
+    }
+
     try {
       await updateBio(next)
 
@@ -336,10 +341,14 @@ export default function MyPage() {
                 <textarea
                   value={bioDraft}
                   onChange={e => setBioDraft(e.target.value)}
+                  maxLength={255}
                   rows={3}
                   className="w-full resize-none rounded-xl border border-border/40 bg-background/30 p-3 text-sm outline-none focus:ring-1 focus:ring-primary/40"
                   aria-label="소개 입력"
                 />
+                <div className="text-xs text-muted-foreground text-right">
+                  {bioDraft.length} / 255
+                </div>
 
                 <div className="flex justify-end gap-2">
                   <Button
