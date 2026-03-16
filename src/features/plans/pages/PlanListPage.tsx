@@ -31,10 +31,15 @@ export default function PlanListPage() {
         console.log('plans response =', data)
 
         setPlans(data.items ?? [])
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (cancelled) return
 
-        if (e?.response?.status === 401) {
+        if (
+          typeof e === 'object' &&
+          e !== null &&
+          'response' in e &&
+          (e as { response?: { status: number } }).response?.status === 401
+        ) {
           window.location.href = '/login'
           return
         }
@@ -49,7 +54,7 @@ export default function PlanListPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [accessToken])
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-10 space-y-6">
