@@ -1,6 +1,9 @@
+import { useMemo, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Candidate } from '@/types/plan'
+import { useKakaoMapLoader } from '@/lib/kakao/useKakaoMapLoader'
+import PlaceMap, { type MapPlaceMarker } from '../components/PlaceMap'
 
 type PlaceTab = 'candidates' | 'recommend'
 
@@ -36,6 +39,22 @@ export default function TriggerPlaceStep({
   isAiLoading,
   onRecommendClick,
 }: TriggerPlaceStepProps) {
+  const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
+  const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
+
+  const markerPlaces: MapPlaceMarker[] = useMemo(
+    () =>
+      recommendedPlaces
+        .filter(place => typeof place.latitude === 'number' && typeof place.longitude === 'number')
+        .map(place => ({
+          id: place.externalId ?? place.name,
+          name: place.name,
+          lat: place.latitude,
+          lng: place.longitude,
+        })),
+    [recommendedPlaces],
+  )
+
   return (
     <div>
       <div className="flex gap-1 rounded-lg bg-secondary/50 p-1">
@@ -80,6 +99,27 @@ export default function TriggerPlaceStep({
 
       {placeTab === 'recommend' && (
         <div className="space-y-3">
+          <div className="space-y-2">
+            {!mapReady && (
+              <div className="flex h-[220px] items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground">
+                지도 불러오는 중...
+              </div>
+            )}
+
+            {mapReady && (
+              <PlaceMap
+                center={
+                  markerPlaces.length > 0
+                    ? { lat: markerPlaces[0].lat, lng: markerPlaces[0].lng }
+                    : null
+                }
+                myLocation={null}
+                places={markerPlaces}
+                focusPlaceId={focusPlaceId}
+                onMarkerClick={id => setFocusPlaceId(id)}
+              />
+            )}
+          </div>
           <button
             onClick={onRecommendClick}
             disabled={isAiLoading}
