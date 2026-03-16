@@ -20,11 +20,14 @@ import { fetchPlanDetail } from '../api'
 import type { Plan } from '@/types/plan'
 import { updatePlanCategoryType } from '../api'
 
+import { useAuthStore } from '@/stores/authStore'
+
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
   const numericPlanId = Number(planId)
 
   const navigate = useNavigate()
+  const accessToken = useAuthStore(state => state.accessToken)
 
   const [plan, setPlan] = useState<Plan | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,6 +52,11 @@ export default function PlanDetailPage() {
 
   useEffect(() => {
     const run = async () => {
+      if (!accessToken) {
+        window.location.href = '/login'
+        return
+      }
+
       try {
         const res = await fetchPlanDetail(numericPlanId)
 
@@ -72,7 +80,7 @@ export default function PlanDetailPage() {
     }
 
     run()
-  }, [numericPlanId])
+  }, [numericPlanId, navigate, accessToken])
 
   useEffect(() => {
     console.log('categories state =', categories)

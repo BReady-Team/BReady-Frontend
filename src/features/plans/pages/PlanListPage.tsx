@@ -3,11 +3,14 @@ import type { PlanSummaryDTO } from '../types'
 import { fetchPlanSummaries } from '../api'
 import { PlanCard } from '../components/PlanCard'
 import { NewPlanButton } from '../components/NewPlanButton'
+import { useAuthStore } from '@/stores/authStore'
 
 export default function PlanListPage() {
   const [plans, setPlans] = useState<PlanSummaryDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const accessToken = useAuthStore(state => state.accessToken)
 
   useEffect(() => {
     let cancelled = false
@@ -17,14 +20,24 @@ export default function PlanListPage() {
         setLoading(true)
         setError(null)
 
+        if (!accessToken) {
+          window.location.href = '/login'
+          return
+        }
+
         const data = await fetchPlanSummaries()
         if (cancelled) return
 
         console.log('plans response =', data)
 
         setPlans(data.items ?? [])
-      } catch {
+      } catch (e: any) {
         if (cancelled) return
+
+        if (e?.response?.status === 401) {
+          window.location.href = '/login'
+          return
+        }
         setError('플랜 목록을 불러오지 못했습니다.')
       } finally {
         if (!cancelled) setLoading(false)
