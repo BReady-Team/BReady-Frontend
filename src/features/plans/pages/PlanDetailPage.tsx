@@ -183,15 +183,13 @@ export default function PlanDetailPage() {
   }
 
   // 트리거 발생
-  const handleTrigger = async (triggerType: TriggerType) => {
+  const handleTrigger = async (triggerType: TriggerType): Promise<{ triggerId: number }> => {
     if (!activeCategory?.id) {
-      console.error('activeCategory 없음', activeCategory)
-      return
+      throw new Error('활성 카테고리가 없습니다.')
     }
 
     if (!plan?.id) {
-      console.error('plan 없음', plan)
-      return
+      throw new Error('플랜 정보가 없습니다.')
     }
 
     console.log('Trigger request = ', {
@@ -203,6 +201,8 @@ export default function PlanDetailPage() {
     const res = await createTrigger(plan.id, activeCategory.id, triggerType)
 
     setTriggerId(res.triggerId)
+
+    return { triggerId: res.triggerId }
   }
   // KEEP 결정
   const handleKeep = async () => {
@@ -371,6 +371,7 @@ export default function PlanDetailPage() {
       {activePanel === 'trigger' && activeCategory && (
         <TriggerPanel
           isOpen
+          region={plan.region}
           categoryType={activeCategory.type}
           candidates={activeCategory.candidates}
           representativeCandidateId={activeCategory.representativeCandidateId}

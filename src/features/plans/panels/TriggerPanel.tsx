@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, ArrowLeft } from 'lucide-react'
 
 import type { CategoryType, TriggerType, Candidate } from '@/types/plan'
+import { recommendPlace } from '@/features/plans/api'
 
 import TriggerSelectStep from './TriggerSelectStep'
 import TriggerDecisionStep from './TriggerDecisionStep'
@@ -10,11 +11,12 @@ import TriggerPlaceStep from './TriggerPlaceStep'
 
 interface TriggerPanelProps {
   isOpen: boolean
+  region: string
   categoryType: CategoryType
   candidates: Candidate[]
   representativeCandidateId: number | null
   onClose: () => void
-  onTrigger: (trigger: TriggerType) => Promise<void>
+  onTrigger: (trigger: TriggerType) => Promise<{ triggerId: number }>
   onKeep: () => Promise<void>
   onSwitchPlace: (toCandidateId: number) => Promise<void>
   onChangeCategory: (type: CategoryType) => void
@@ -25,6 +27,7 @@ type Step = 'select' | 'decision' | 'change-category' | 'change-place'
 
 export default function TriggerPanel({
   isOpen,
+  region,
   categoryType,
   candidates,
   representativeCandidateId,
@@ -39,6 +42,21 @@ export default function TriggerPanel({
   const [placeTab, setPlaceTab] = useState<PlaceTab>('candidates')
   const [busy, setBusy] = useState(false)
 
+  const [triggerId, setTriggerId] = useState<number | null>(null)
+  const [isAiLoading, setIsAiLoading] = useState(false)
+  const [recommendedPlaces, setRecommendedPlaces] = useState<
+    Array<{
+      externalId: string
+      name: string
+      address: string
+      latitude: number
+      longitude: number
+      isIndoor: boolean
+      distanceMeters: number
+      reason: string
+    }>
+  >([])
+
   if (!isOpen) return null
 
   const resetAndClose = () => {
@@ -46,14 +64,23 @@ export default function TriggerPanel({
     setSelectedTrigger(null)
     setPlaceTab('candidates')
     setBusy(false)
+    setTriggerId(null)
+    setIsAiLoading(false)
+    setRecommendedPlaces([])
     onClose()
   }
 
   const handleSelectTrigger = async (trigger: TriggerType) => {
     try {
       setBusy(true)
-      await onTrigger(trigger)
+
+      const result = await onTrigger(trigger)
+      setTriggerId(result.triggerId)
+
       setSelectedTrigger(trigger)
+
+      setRecommendedPlaces([])
+
       setStep('decision')
     } finally {
       setBusy(false)
@@ -82,6 +109,37 @@ export default function TriggerPanel({
       resetAndClose()
     } finally {
       setBusy(false)
+    }
+  }
+
+  const handleRecommend = async () => {
+    if (!triggerId) return
+
+    const currentCandidate = candidates.find(c => c.id === representativeCandidateId)
+    if (!currentCandidate) return
+
+    const lat = currentCandidate.place.latitude
+    const lng = currentCandidate.place.longitude
+
+    if (lat == null || lng == null) return
+
+    try {
+      setIsAiLoading(true)
+
+      const items = await recommendPlace(
+        {
+          region,
+          latitude: lat,
+          longitude: lng,
+          radius: 3000,
+          size: 5,
+        },
+        { triggerId },
+      )
+
+      setRecommendedPlaces(items)
+    } finally {
+      setIsAiLoading(false)
     }
   }
 
@@ -151,7 +209,9 @@ export default function TriggerPanel({
               representativeCandidateId={representativeCandidateId}
               busy={busy}
               onSwitchPlace={handleSwitchPlace}
-              onRecommendClick={resetAndClose}
+              recommendedPlaces={recommendedPlaces}
+              isAiLoading={isAiLoading}
+              onRecommendClick={handleRecommend}
             />
           )}
         </div>

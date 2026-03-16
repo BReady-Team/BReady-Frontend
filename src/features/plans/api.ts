@@ -131,8 +131,6 @@ export async function recommendPlace(
     size: number
   },
   body: {
-    planId: number
-    categoryId: number
     triggerId: number
   },
 ): Promise<
@@ -143,7 +141,7 @@ export async function recommendPlace(
     latitude: number
     longitude: number
     isIndoor: boolean
-    distance: number
+    distanceMeters: number
     reason: string
   }>
 > {
