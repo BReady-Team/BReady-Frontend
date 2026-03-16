@@ -156,7 +156,7 @@ export default function TriggerPanel({
         }}
       />
 
-      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-border bg-background shadow-xl">
+      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl border-l border-border bg-background shadow-xl">
         <header className="flex items-center justify-between border-b border-border/50 p-4">
           <div className="flex items-center gap-2 text-sm font-medium">
             {step !== 'select' && (

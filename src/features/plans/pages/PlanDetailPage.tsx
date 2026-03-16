@@ -251,11 +251,7 @@ export default function PlanDetailPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div
-        className={`mx-auto max-w-3xl px-6 py-12 transition-all ${
-          activePanel !== 'none' ? 'mr-[420px]' : ''
-        }`}
-      >
+      <div className={`mx-auto max-w-3xl px-6 py-12`}>
         <header className="mb-10 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-semibold">{plan.title}</h1>
