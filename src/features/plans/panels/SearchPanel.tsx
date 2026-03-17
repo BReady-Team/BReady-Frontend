@@ -13,7 +13,7 @@ interface SearchPanelProps {
   categoryId: number
   categoryType: PlaceCategoryType
   onClose: () => void
-  onAddPlace: (place: Place) => void
+  onAddPlace: (candidateId: number, place: Place) => void
 }
 
 export default function SearchPanel({
@@ -115,7 +115,7 @@ export default function SearchPanel({
       isRepresentative: false,
     }
 
-    onAddPlace(savedPlace)
+    onAddPlace(res.candidateId, savedPlace)
   }
 
   return (

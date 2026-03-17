@@ -140,17 +140,25 @@ export default function PlanDetailPage() {
     }
   }
 
-  const handleAddPlace = (categoryId: number, place: Place) => {
-    const tempCandidate: Candidate = {
-      id: place.id,
-      place,
-      isRepresentative: false,
-    }
-
+  const handleAddPlace = async (categoryId: number, place: Place) => {
     setCategories(prev =>
-      prev.map(cat =>
-        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, tempCandidate] } : cat,
-      ),
+      prev.map(cat => {
+        if (cat.id !== categoryId) return cat
+
+        const hadNoCandidtaes = cat.candidates.length === 0
+
+        const newCandidate: Candidate = {
+          id: place.id,
+          place,
+          isRepresentative: hadNoCandidtaes,
+        }
+
+        return {
+          ...cat,
+          candidates: [...cat.candidates, newCandidate],
+          representativeCandidateId: hadNoCandidtaes ? place.id : cat.representativeCandidateId,
+        }
+      }),
     )
   }
 
@@ -368,7 +376,7 @@ export default function PlanDetailPage() {
           categoryId={activeCategory.id}
           categoryType={activeCategory.type}
           onClose={closePanel}
-          onAddPlace={place => handleAddPlace(activeCategory.id, place)}
+          onAddPlace={(candidateId, place) => handleAddPlace(activeCategory.id, place)}
         />
       )}
 
