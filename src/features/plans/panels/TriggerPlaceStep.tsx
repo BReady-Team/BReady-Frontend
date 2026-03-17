@@ -85,10 +85,6 @@ export default function TriggerPlaceStep({
                 onClick={() => onSwitchPlace(candidate.id)}
                 className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
               >
-                <img
-                  src={place.thumbnailUrl ?? '/seoul_forest.jpg'}
-                  className="h-12 w-16 rounded-md object-cover"
-                />
                 <div>
                   <p className="text-sm font-medium">{place.name}</p>
                   <p className="text-xs text-muted-foreground">{place.location}</p>

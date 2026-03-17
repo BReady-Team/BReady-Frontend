@@ -378,7 +378,7 @@ export default function PlanDetailPage() {
           categoryId={activeCategory.id}
           categoryType={activeCategory.type}
           onClose={closePanel}
-          onAddPlace={(candidateId, place) => handleAddPlace(activeCategory.id, place)}
+          onAddPlace={place => handleAddPlace(activeCategory.id, place)}
         />
       )}
 

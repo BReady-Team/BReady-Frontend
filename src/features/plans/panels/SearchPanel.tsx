@@ -13,7 +13,7 @@ interface SearchPanelProps {
   categoryId: number
   categoryType: PlaceCategoryType
   onClose: () => void
-  onAddPlace: (candidateId: number, place: Place) => void
+  onAddPlace: (place: Place) => void
 }
 
 export default function SearchPanel({
@@ -68,7 +68,6 @@ export default function SearchPanel({
         longitude: p.longitude,
         rating: 0,
         isIndoor: p.isIndoor ?? false,
-        thumbnailUrl: '/seoul_forest.jpg',
       }))
 
       setResults(mapped)
@@ -111,11 +110,10 @@ export default function SearchPanel({
       location: res.place.address ?? '',
       rating: 0,
       isIndoor: res.place.isIndoor ?? false,
-      thumbnailUrl: '/seoul_forest.jpg',
       isRepresentative: false,
     }
 
-    onAddPlace(res.candidateId, savedPlace)
+    onAddPlace(savedPlace)
   }
 
   return (
