@@ -118,6 +118,8 @@ export default function PlanDetailPage() {
 
       if (!targetCandidate) return
 
+      if (targetCategory?.representativeCandidateId === candidateId) return
+
       await setRepresentative(candidateId)
 
       setCategories(prev =>
