@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Search, MapPin, Star, Plus } from 'lucide-react'
+import { X, Search, MapPin, Plus } from 'lucide-react'
 import type { Place } from '@/types/plan'
 import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
 import { cn } from '@/lib/utils'
@@ -206,11 +206,6 @@ export default function SearchPanel({
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         {place.location}
-                      </span>
-
-                      <span className="flex items-center gap-1 text-amber-500">
-                        <Star className="h-3 w-3 fill-current" />
-                        {place.rating}
                       </span>
                     </div>
                   </div>

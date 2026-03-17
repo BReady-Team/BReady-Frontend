@@ -1,4 +1,4 @@
-import { MapPin, Star, Check, Trash2 } from 'lucide-react'
+import { MapPin, Check, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Place } from '@/types/plan'
 
@@ -77,10 +77,6 @@ export default function PlaceItem({
         </div>
 
         <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1 text-amber-500">
-            <Star className="h-3 w-3 fill-current" />
-            {place.rating}
-          </span>
           <span
             className={cn(
               'rounded-full px-2 py-0.5 text-[10px]',
