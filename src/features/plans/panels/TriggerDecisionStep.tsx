@@ -46,24 +46,27 @@ export default function TriggerDecisionStep({
 
   return (
     <>
-      <div className="rounded-lg bg-secondary/50 p-4">
-        <p className="flex items-center gap-2 text-sm font-medium">
-          <Icon className="h-4 w-4 text-primary" />
-          {triggerLabels[selectedTrigger]}
-        </p>
+      <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-6">
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/20">
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
+
+          <p className="text-lg font-semibold text-foreground">{triggerLabels[selectedTrigger]}</p>
+        </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">어떻게 하시겠어요?</p>
+      <p className="mt-4 text-sm text-muted-foreground">어떻게 하시겠어요?</p>
 
       <button
         disabled={busy}
         onClick={() => onKeep()}
-        className="flex w-full items-center gap-3 rounded-xl border border-border/50 p-4 hover:bg-secondary/50 disabled:opacity-60"
+        className="mt-4 flex w-full items-center gap-4 rounded-xl border border-border/50 bg-background/40 p-4 transition-all duration-150 hover:bg-secondary/100 disabled:opacity-60"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
-          <Check className="h-5 w-5" />
+          <Check className="h-5 w-5 text-foreground" />
         </div>
-        <div>
+        <div className="space-y-1.5 text-left">
           <p className="text-sm font-medium">그대로 유지</p>
           <p className="text-xs text-muted-foreground">현재 계획대로 진행</p>
         </div>
@@ -72,12 +75,12 @@ export default function TriggerDecisionStep({
       <button
         disabled={busy}
         onClick={onGoChangeCategory}
-        className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 disabled:opacity-60"
+        className="mt-3 flex w-full items-center gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-all duration-150 hover:bg-primary/10 disabled:opacity-60"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
           <ArrowRightLeft className="h-5 w-5 text-primary" />
         </div>
-        <div>
+        <div className="space-y-1.5 text-left">
           <p className="text-sm font-medium">카테고리 변경</p>
           <p className="text-xs text-muted-foreground">다른 활동으로 전환</p>
         </div>
@@ -86,12 +89,12 @@ export default function TriggerDecisionStep({
       <button
         disabled={busy}
         onClick={onGoChangePlace}
-        className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 disabled:opacity-60"
+        className="mt-3 flex w-full items-center gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-all duration-150 hover:bg-primary/10 disabled:opacity-60"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
           <RefreshCw className="h-5 w-5 text-primary" />
         </div>
-        <div>
+        <div className="space-y-1.5 text-left">
           <p className="text-sm font-medium">장소 변경</p>
           <p className="text-xs text-muted-foreground">다른 장소로 전환</p>
         </div>
