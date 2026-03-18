@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { CategoryType } from '@/types/plan'
 import { cn } from '@/lib/utils'
+import { categoryMeta } from '../constants/categoryMeta'
 
 interface AddCategoryButtonProps {
   onAdd: (type: CategoryType) => void
@@ -44,27 +45,31 @@ export default function AddCategoryButton({ onAdd }: AddCategoryButtonProps) {
 
           {/* 드롭다운 패널 */}
           <div className="absolute left-1/2 top-full z-20 mt-2 w-52 -translate-x-1/2 rounded-lg border border-border bg-card p-2 shadow-lg">
-            {CATEGORY_OPTIONS.map(({ type, label }) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => {
-                  onAdd(type)
-                  setIsOpen(false)
-                }}
-                className={cn(
-                  'flex w-full items-center gap-2 rounded-md px-3 py-2',
-                  'text-sm text-foreground',
-                  'transition-colors',
-                  'hover:bg-secondary',
-                )}
-              >
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-                  {label[0]}
-                </span>
-                {label}
-              </button>
-            ))}
+            {CATEGORY_OPTIONS.map(({ type, label }) => {
+              const { Icon } = categoryMeta[type]
+
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    onAdd(type)
+                    setIsOpen(false)
+                  }}
+                  className={cn(
+                    'group flex w-full items-center gap-2 rounded-md px-3 py-2',
+                    'text-sm text-foreground transition-all duration-150',
+                    'hover:bg-secondary/100 hover:text-primary',
+                  )}
+                >
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </span>
+
+                  {label}
+                </button>
+              )
+            })}
           </div>
         </>
       )}

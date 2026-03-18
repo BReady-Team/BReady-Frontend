@@ -332,7 +332,7 @@ export default function MyPage() {
       <section className="rounded-2xl border border-border/40 bg-card/50 p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div className="w-full space-y-2">
-            <p className="text-xs text-muted-foreground">소개</p>
+            <p className="text-sm text-muted-foreground">소개</p>
 
             {loading ? (
               <p className="text-sm text-muted-foreground">불러오는 중...</p>
