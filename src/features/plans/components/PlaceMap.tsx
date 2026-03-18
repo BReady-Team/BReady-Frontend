@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useRef } from 'react'
 
+type KakaoMapInstance = {
+  panTo: (position: unknown) => void
+  setCenter: (position: unknown) => void
+}
+
+type KakaoMarkerInstance = {
+  setMap: (map: KakaoMapInstance | null) => void
+  setPosition: (position: unknown) => void
+  getPosition: () => unknown
+}
+
 type LatLng = { lat: number; lng: number }
 
 export type MapPlaceMarker = {
@@ -25,10 +36,10 @@ export default function PlaceMap({
   onMarkerClick,
 }: PlaceMapProps) {
   const mapElRef = useRef<HTMLDivElement | null>(null)
-  const mapRef = useRef<any>(null)
+  const mapRef = useRef<KakaoMapInstance | null>(null)
 
-  const myMarkerRef = useRef<any>(null)
-  const placeMarkersRef = useRef<Map<string, any>>(new Map())
+  const myMarkerRef = useRef<KakaoMarkerInstance | null>(null)
+  const placeMarkersRef = useRef<Map<string, KakaoMarkerInstance>>(new Map())
 
   const fallbackCenter = useMemo(() => ({ lat: 37.5665, lng: 126.978 }), [])
   const initialCenter = center ?? myLocation ?? fallbackCenter
@@ -37,7 +48,7 @@ export default function PlaceMap({
   useEffect(() => {
     if (!mapElRef.current) return
 
-    const kakao = (window as any).kakao
+    const kakao: typeof window.kakao | undefined = window.kakao
     if (!kakao?.maps) return
     if (mapRef.current) return
 
@@ -51,7 +62,7 @@ export default function PlaceMap({
 
   // 내 위치 마커
   useEffect(() => {
-    const kakao = window.kakao
+    const kakao: typeof window.kakao | undefined = window.kakao
     const map = mapRef.current
     if (!kakao?.maps || !map) return
 
@@ -96,11 +107,11 @@ export default function PlaceMap({
     } else {
       myMarkerRef.current.setPosition(pos)
     }
-  }, [myLocation?.lat, myLocation?.lng])
+  }, [myLocation])
 
   // 검색 결과 마커 동기화 (추가/삭제/갱신)
   useEffect(() => {
-    const kakao = window.kakao
+    const kakao: typeof window.kakao | undefined = window.kakao
     const map = mapRef.current
     if (!kakao?.maps || !map) return
 
@@ -139,7 +150,7 @@ export default function PlaceMap({
 
   // focusPlaceId가 바뀌면 해당 마커로 중심 이동
   useEffect(() => {
-    const kakao = window.kakao
+    const kakao: typeof window.kakao | undefined = window.kakao
     const map = mapRef.current
     if (!kakao?.maps || !map) return
     if (!focusPlaceId) return
@@ -153,14 +164,14 @@ export default function PlaceMap({
 
   // 초기 center 변경 시 지도 중심 이동 (검색 시작 지점 반영)
   useEffect(() => {
-    const kakao = window.kakao
+    const kakao: typeof window.kakao | undefined = window.kakao
     const map = mapRef.current
     if (!kakao?.maps || !map) return
     if (!center && !myLocation) return
 
     const c = center ?? myLocation!
     map.setCenter(new kakao.maps.LatLng(c.lat, c.lng))
-  }, [center?.lat, center?.lng, myLocation?.lat, myLocation?.lng])
+  }, [center, myLocation])
 
-  return <div ref={mapElRef} className="w-full h-[220px] rounded-lg border border-border/50" />
+  return <div ref={mapElRef} className="w-full h-[300px] rounded-lg border border-border/50" />
 }

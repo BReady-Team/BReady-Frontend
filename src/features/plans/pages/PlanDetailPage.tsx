@@ -20,11 +20,14 @@ import { fetchPlanDetail } from '../api'
 import type { Plan } from '@/types/plan'
 import { updatePlanCategoryType } from '../api'
 
+import { useAuthStore } from '@/stores/authStore'
+
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
   const numericPlanId = Number(planId)
 
   const navigate = useNavigate()
+  const accessToken = useAuthStore(state => state.accessToken)
 
   const [plan, setPlan] = useState<Plan | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,6 +52,11 @@ export default function PlanDetailPage() {
 
   useEffect(() => {
     const run = async () => {
+      if (!accessToken) {
+        window.location.href = '/login'
+        return
+      }
+
       try {
         const res = await fetchPlanDetail(numericPlanId)
 
@@ -72,7 +80,7 @@ export default function PlanDetailPage() {
     }
 
     run()
-  }, [numericPlanId])
+  }, [numericPlanId, navigate, accessToken])
 
   useEffect(() => {
     console.log('categories state =', categories)
@@ -110,6 +118,8 @@ export default function PlanDetailPage() {
 
       if (!targetCandidate) return
 
+      if (targetCategory?.representativeCandidateId === candidateId) return
+
       await setRepresentative(candidateId)
 
       setCategories(prev =>
@@ -132,17 +142,25 @@ export default function PlanDetailPage() {
     }
   }
 
-  const handleAddPlace = (categoryId: number, place: Place) => {
-    const tempCandidate: Candidate = {
-      id: place.id,
-      place,
-      isRepresentative: false,
-    }
-
+  const handleAddPlace = async (categoryId: number, place: Place) => {
     setCategories(prev =>
-      prev.map(cat =>
-        cat.id === categoryId ? { ...cat, candidates: [...cat.candidates, tempCandidate] } : cat,
-      ),
+      prev.map(cat => {
+        if (cat.id !== categoryId) return cat
+
+        const hadNoCandidtaes = cat.candidates.length === 0
+
+        const newCandidate: Candidate = {
+          id: place.id,
+          place,
+          isRepresentative: hadNoCandidtaes,
+        }
+
+        return {
+          ...cat,
+          candidates: [...cat.candidates, newCandidate],
+          representativeCandidateId: hadNoCandidtaes ? place.id : cat.representativeCandidateId,
+        }
+      }),
     )
   }
 
@@ -183,15 +201,13 @@ export default function PlanDetailPage() {
   }
 
   // 트리거 발생
-  const handleTrigger = async (triggerType: TriggerType) => {
+  const handleTrigger = async (triggerType: TriggerType): Promise<{ triggerId: number }> => {
     if (!activeCategory?.id) {
-      console.error('activeCategory 없음', activeCategory)
-      return
+      throw new Error('활성 카테고리가 없습니다.')
     }
 
     if (!plan?.id) {
-      console.error('plan 없음', plan)
-      return
+      throw new Error('플랜 정보가 없습니다.')
     }
 
     console.log('Trigger request = ', {
@@ -203,6 +219,8 @@ export default function PlanDetailPage() {
     const res = await createTrigger(plan.id, activeCategory.id, triggerType)
 
     setTriggerId(res.triggerId)
+
+    return { triggerId: res.triggerId }
   }
   // KEEP 결정
   const handleKeep = async () => {
@@ -250,17 +268,13 @@ export default function PlanDetailPage() {
   }
 
   return (
-    <div className="relative min-h-screen">
-      <div
-        className={`mx-auto max-w-3xl px-6 py-12 transition-all ${
-          activePanel !== 'none' ? 'mr-[420px]' : ''
-        }`}
-      >
-        <header className="mb-10 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">{plan.title}</h1>
+    <div className="relative min-h-screen bg-background">
+      <div className="mx-auto max-w-4xl px-6 py-10">
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-semibold tracking-tight">{plan.title}</h1>
 
-            <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 {formatKoreanDate(plan.date)}
@@ -276,7 +290,7 @@ export default function PlanDetailPage() {
           <div className="relative">
             <button
               onClick={() => setIsManageOpen(prev => !prev)}
-              className="rounded-md border border-border/50 px-3 py-1.5 text-sm hover:bg-secondary"
+              className="rounded-md border border-border/50 px-3 py-2 text-sm hover:bg-secondary"
             >
               관리
             </button>
@@ -284,7 +298,7 @@ export default function PlanDetailPage() {
             {isManageOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsManageOpen(false)} />
-                <div className="absolute right-0 z-50 mt-2 w-36 rounded-md border border-border bg-background shadow-lg">
+                <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl border border-border bg-background p-1 shadow-lg">
                   <button
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
                     onClick={() => {
@@ -322,7 +336,7 @@ export default function PlanDetailPage() {
           </div>
         </header>
 
-        <div className="space-y-4">
+        <div className="space-y-8">
           {categories.map(category => (
             <CategoryCard
               key={`category-${category.id}`}
@@ -354,7 +368,9 @@ export default function PlanDetailPage() {
             />
           ))}
 
-          <AddCategoryButton onAdd={handleAddCategory} />
+          <div className="pt-2">
+            <AddCategoryButton onAdd={handleAddCategory} />
+          </div>
         </div>
       </div>
 
@@ -371,6 +387,10 @@ export default function PlanDetailPage() {
       {activePanel === 'trigger' && activeCategory && (
         <TriggerPanel
           isOpen
+          planId={plan.id}
+          categoryId={activeCategory.id}
+          onAddPlace={place => handleAddPlace(activeCategory.id, place)}
+          region={plan.region}
           categoryType={activeCategory.type}
           candidates={activeCategory.candidates}
           representativeCandidateId={activeCategory.representativeCandidateId}

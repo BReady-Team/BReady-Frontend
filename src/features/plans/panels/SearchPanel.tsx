@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Search, MapPin, Star, Plus, Sparkles } from 'lucide-react'
+import { X, Search, MapPin, Plus } from 'lucide-react'
 import type { Place } from '@/types/plan'
 import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
 import { cn } from '@/lib/utils'
@@ -26,7 +26,6 @@ export default function SearchPanel({
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Place[]>([])
   const [isFetching, setIsFetching] = useState(false)
-  const [isAiLoading, setIsAiLoading] = useState(false)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
   const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
@@ -69,7 +68,6 @@ export default function SearchPanel({
         longitude: p.longitude,
         rating: 0,
         isIndoor: p.isIndoor ?? false,
-        thumbnailUrl: '/seoul_forest.jpg',
       }))
 
       setResults(mapped)
@@ -112,18 +110,10 @@ export default function SearchPanel({
       location: res.place.address ?? '',
       rating: 0,
       isIndoor: res.place.isIndoor ?? false,
-      thumbnailUrl: '/seoul_forest.jpg',
       isRepresentative: false,
     }
 
     onAddPlace(savedPlace)
-  }
-
-  const handleRecommend = () => {
-    setIsAiLoading(true)
-    setTimeout(() => {
-      setIsAiLoading(false)
-    }, 500)
   }
 
   return (
@@ -136,7 +126,12 @@ export default function SearchPanel({
         onClick={onClose}
       />
 
-      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-border bg-background shadow-xl">
+      <aside
+        className="
+        fixed inset-y-0 right-0 z-50 
+        flex w-full max-w-2xl flex-col
+        border-l border-border bg-background shadow-xl"
+      >
         <header className="flex items-center justify-between border-b border-border/50 p-4">
           <h2 className="text-sm font-medium">장소 추가</h2>
           <button
@@ -147,13 +142,13 @@ export default function SearchPanel({
           </button>
         </header>
 
-        <div className="p-6 space-y-6">
+        <div className="flex min-h-0 flex-1 flex-col p-6">
           <p className="text-sm text-muted-foreground">후보 장소에 추가할 곳을 찾아보세요</p>
 
           {/* 지도 */}
           <div className="space-y-2">
             {!mapReady && (
-              <div className="h-[220px] rounded-lg border border-border/50 flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-[300px] rounded-lg border border-border/50 flex items-center justify-center text-sm text-muted-foreground">
                 지도 불러오는 중...
               </div>
             )}
@@ -169,7 +164,7 @@ export default function SearchPanel({
             )}
           </div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mb-4">
             현재 위치 마커 + 검색 결과 마커가 지도에 표시됩니다.
           </p>
 
@@ -194,63 +189,51 @@ export default function SearchPanel({
             </button>
           </form>
 
-          {/* AI 추천 */}
-          <button
-            onClick={handleRecommend}
-            disabled={isAiLoading}
-            className={cn(
-              'flex w-full items-center justify-center gap-2',
-              'h-12 rounded-lg text-sm font-medium',
-              'bg-primary/10 text-primary border border-primary/20',
-              'hover:bg-primary/20 transition-colors',
-            )}
-          >
-            <Sparkles className="h-4 w-4" />
-            {isAiLoading ? '추천 중...' : 'AI 추천받기'}
-          </button>
-
-          {(isFetching || isAiLoading) && <p className="text-sm">불러오는 중...</p>}
+          {isFetching && <p className="text-sm mt-4">불러오는 중...</p>}
 
           {/* 검색 결과 */}
-          {results.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">검색 결과</p>
+          <div className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
+            {results.length > 0 && (
+              <div className="space-y-3 pb-1">
+                <p className="text-sm text-muted-foreground">검색 결과</p>
 
-              {results.map(place => (
-                <div
-                  key={place.externalId ?? place.id}
-                  className="flex items-center justify-between rounded-lg border border-border/50 p-3 hover:bg-secondary/40"
-                  onClick={() => setFocusPlaceId(place.id)}
-                >
-                  <div>
-                    <p className="text-sm font-medium">{place.name}</p>
-
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {place.location}
-                      </span>
-
-                      <span className="flex items-center gap-1 text-amber-500">
-                        <Star className="h-3 w-3 fill-current" />
-                        {place.rating}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleAdd(place)
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
+                {results.map(place => (
+                  <div
+                    key={place.externalId ?? place.id}
+                    className={cn(
+                      'flex items-start justify-between gap-4',
+                      'rounded-xl border border-border/50 bg-background/40 p-4',
+                      'transition-all duration-150 hover:bg-secondary/100',
+                    )}
+                    onClick={() => setFocusPlaceId(place.id)}
                   >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold text-primary">{place.name}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-foreground">
+                        <div className="flex w-4 shrink-0 justify-center">
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <span className="line-clamp-1">{place.location}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleAdd(place)
+                      }}
+                      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors hover:bg-secondary"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>
