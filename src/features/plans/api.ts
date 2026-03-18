@@ -2,9 +2,9 @@ import { http } from '@/lib/http'
 import type { PlanListResponse, PlanCategorySummary, CandidateResponse } from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
-export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
+export const fetchPlanSummaries = async (page = 0, size = 10): Promise<PlanListResponse> => {
   const res = await http.get('/api/v1/plans', {
-    params: { page: 0, size: 10, order: 'DESC' },
+    params: { page, size, order: 'DESC' },
   })
 
   const data = res.data.data
