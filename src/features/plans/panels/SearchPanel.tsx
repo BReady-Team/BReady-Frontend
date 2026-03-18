@@ -126,7 +126,12 @@ export default function SearchPanel({
         onClick={onClose}
       />
 
-      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl border-l border-border bg-background shadow-xl">
+      <aside
+        className="
+        fixed inset-y-0 right-0 z-50 
+        flex w-full max-w-2xl flex-col
+        border-l border-border bg-background shadow-xl"
+      >
         <header className="flex items-center justify-between border-b border-border/50 p-4">
           <h2 className="text-sm font-medium">장소 추가</h2>
           <button
@@ -137,7 +142,7 @@ export default function SearchPanel({
           </button>
         </header>
 
-        <div className="p-6 space-y-6">
+        <div className="flex min-h-0 flex-1 flex-col p-6">
           <p className="text-sm text-muted-foreground">후보 장소에 추가할 곳을 찾아보세요</p>
 
           {/* 지도 */}
@@ -159,7 +164,7 @@ export default function SearchPanel({
             )}
           </div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mb-4">
             현재 위치 마커 + 검색 결과 마커가 지도에 표시됩니다.
           </p>
 
@@ -184,43 +189,45 @@ export default function SearchPanel({
             </button>
           </form>
 
-          {isFetching && <p className="text-sm">불러오는 중...</p>}
+          {isFetching && <p className="text-sm mt-4">불러오는 중...</p>}
 
           {/* 검색 결과 */}
-          {results.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">검색 결과</p>
+          <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
+            {results.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">검색 결과</p>
 
-              {results.map(place => (
-                <div
-                  key={place.externalId ?? place.id}
-                  className="flex items-center justify-between rounded-lg border border-border/50 p-3 hover:bg-secondary/40"
-                  onClick={() => setFocusPlaceId(place.id)}
-                >
-                  <div>
-                    <p className="text-sm font-medium">{place.name}</p>
-
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {place.location}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleAdd(place)
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
+                {results.map(place => (
+                  <div
+                    key={place.externalId ?? place.id}
+                    className="flex items-center justify-between rounded-lg border border-border/50 p-3 hover:bg-secondary/40"
+                    onClick={() => setFocusPlaceId(place.id)}
                   >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                    <div>
+                      <p className="text-sm font-medium">{place.name}</p>
+
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {place.location}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleAdd(place)
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>
