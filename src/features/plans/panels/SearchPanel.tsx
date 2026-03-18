@@ -148,7 +148,7 @@ export default function SearchPanel({
           {/* 지도 */}
           <div className="space-y-2">
             {!mapReady && (
-              <div className="h-[220px] rounded-lg border border-border/50 flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-[300px] rounded-lg border border-border/50 flex items-center justify-center text-sm text-muted-foreground">
                 지도 불러오는 중...
               </div>
             )}
@@ -192,25 +192,31 @@ export default function SearchPanel({
           {isFetching && <p className="text-sm mt-4">불러오는 중...</p>}
 
           {/* 검색 결과 */}
-          <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
+          <div className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
             {results.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-3 pb-1">
                 <p className="text-sm text-muted-foreground">검색 결과</p>
 
                 {results.map(place => (
                   <div
                     key={place.externalId ?? place.id}
-                    className="flex items-center justify-between rounded-lg border border-border/50 p-3 hover:bg-secondary/40"
+                    className={cn(
+                      'flex items-start justify-between gap-4',
+                      'rounded-xl border border-border/50 bg-background/40 p-4',
+                      'transition-all duration-150 hover:bg-secondary/100',
+                    )}
                     onClick={() => setFocusPlaceId(place.id)}
                   >
-                    <div>
-                      <p className="text-sm font-medium">{place.name}</p>
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold text-primary">{place.name}</p>
+                      </div>
 
-                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {place.location}
-                        </span>
+                      <div className="flex items-center gap-2 text-sm text-foreground">
+                        <div className="flex w-4 shrink-0 justify-center">
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <span className="line-clamp-1">{place.location}</span>
                       </div>
                     </div>
 
@@ -219,7 +225,7 @@ export default function SearchPanel({
                         e.stopPropagation()
                         handleAdd(place)
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
+                      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors hover:bg-secondary"
                     >
                       <Plus className="h-4 w-4" />
                     </button>

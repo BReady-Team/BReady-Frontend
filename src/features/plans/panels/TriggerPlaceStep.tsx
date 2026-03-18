@@ -108,7 +108,7 @@ export default function TriggerPlaceStep({
             key={tab}
             onClick={() => setPlaceTab(tab)}
             className={cn(
-              'flex-1 rounded-md px-3 py-2 text-xs font-medium',
+              'flex-1 rounded-md px-3 py-2 text-sm font-medium cursor-pointer',
               placeTab === tab ? 'bg-background shadow' : 'text-muted-foreground',
             )}
           >
@@ -117,32 +117,47 @@ export default function TriggerPlaceStep({
         ))}
       </div>
 
-      {placeTab === 'candidates' &&
-        candidates
-          .filter(c => c.id !== representativeCandidateId)
-          .map(candidate => {
-            const place = candidate.place
+      {placeTab === 'candidates' && (
+        <div className="mt-3 space-y-3">
+          {candidates
+            .filter(c => c.id !== representativeCandidateId)
+            .map(candidate => {
+              const place = candidate.place
 
-            return (
-              <button
-                key={candidate.id}
-                disabled={busy}
-                onClick={() => onSwitchPlace(candidate.id)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
-              >
-                <div>
-                  <p className="text-sm font-medium">{place.name}</p>
-                  <p className="text-xs text-muted-foreground">{place.location}</p>
-                </div>
-              </button>
-            )
-          })}
+              return (
+                <button
+                  key={candidate.id}
+                  disabled={busy}
+                  onClick={() => onSwitchPlace(candidate.id)}
+                  className={cn(
+                    'flex w-full items-center gap-3',
+                    'rounded-xl border border-border/50 bg-background/40 p-4',
+                    'transition-all duration-150 hover:bg-secondary/100',
+                    'disabled:opacity-60',
+                  )}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-semibold text-primary">{place.name}</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-foreground">
+                      <div className="flex w-4 shrink-0 justify-center">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <span className="line-clamp-1">{place.location}</span>
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+        </div>
+      )}
 
       {placeTab === 'recommend' && (
         <div className="mt-3 flex min-h-0 flex-1 flex-col space-y-3">
           <div className="space-y-2">
             {!mapReady && (
-              <div className="flex h-[220px] items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground">
+              <div className="flex h-[300px] items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground">
                 지도 불러오는 중...
               </div>
             )}
@@ -196,7 +211,7 @@ export default function TriggerPlaceStep({
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-base font-semibold text-primary">{place.name}</p>
+                      <p className="text-sm font-semibold text-primary">{place.name}</p>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-foreground">
@@ -223,7 +238,7 @@ export default function TriggerPlaceStep({
                     }}
                     className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors hover:bg-secondary"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-5 w-5 cursor-pointer" />
                   </button>
                 </div>
               </div>
