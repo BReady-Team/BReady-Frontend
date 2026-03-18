@@ -387,6 +387,9 @@ export default function PlanDetailPage() {
       {activePanel === 'trigger' && activeCategory && (
         <TriggerPanel
           isOpen
+          planId={plan.id}
+          categoryId={activeCategory.id}
+          onAddPlace={place => handleAddPlace(activeCategory.id, place)}
           region={plan.region}
           categoryType={activeCategory.type}
           candidates={activeCategory.candidates}

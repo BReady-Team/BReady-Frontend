@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, ArrowLeft } from 'lucide-react'
 
-import type { CategoryType, TriggerType, Candidate } from '@/types/plan'
+import type { CategoryType, TriggerType, Candidate, Place } from '@/types/plan'
 import { recommendCategory, recommendPlace } from '@/features/plans/api'
 
 import TriggerSelectStep from './TriggerSelectStep'
@@ -11,6 +11,9 @@ import TriggerPlaceStep from './TriggerPlaceStep'
 
 interface TriggerPanelProps {
   isOpen: boolean
+  planId: number
+  categoryId: number
+  onAddPlace: (place: Place) => void
   region: string
   categoryType: CategoryType
   candidates: Candidate[]
@@ -27,6 +30,9 @@ type Step = 'select' | 'decision' | 'change-category' | 'change-place'
 
 export default function TriggerPanel({
   isOpen,
+  planId,
+  categoryId,
+  onAddPlace,
   region,
   categoryType,
   candidates,
@@ -184,7 +190,7 @@ export default function TriggerPanel({
         }}
       />
 
-      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl border-l border-border bg-background shadow-xl">
+      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col border-l border-border bg-background shadow-xl">
         <header className="flex items-center justify-between border-b border-border/50 p-4">
           <div className="flex items-center gap-2 text-sm font-medium">
             {step !== 'select' && (
@@ -206,7 +212,7 @@ export default function TriggerPanel({
           </button>
         </header>
 
-        <div className="space-y-6 p-6">
+        <div className="flex min-h-0 flex-1 flex-col p-6">
           {step === 'select' && (
             <TriggerSelectStep busy={busy} onSelectTrigger={handleSelectTrigger} />
           )}
@@ -235,6 +241,9 @@ export default function TriggerPanel({
 
           {step === 'change-place' && (
             <TriggerPlaceStep
+              planId={planId}
+              categoryId={categoryId}
+              onAddPlace={onAddPlace}
               placeTab={placeTab}
               setPlaceTab={setPlaceTab}
               candidates={candidates}

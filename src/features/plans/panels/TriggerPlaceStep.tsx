@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, MapPin, Compass, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Candidate } from '@/types/plan'
+import type { Candidate, Place } from '@/types/plan'
+import { createCandidate, type CreateCandidateRequest } from '@/lib/api/place'
 import { useKakaoMapLoader } from '@/lib/kakao/useKakaoMapLoader'
 import PlaceMap, { type MapPlaceMarker } from '../components/PlaceMap'
 
 type PlaceTab = 'candidates' | 'recommend'
 
 interface TriggerPlaceStepProps {
+  planId: number
+  categoryId: number
+  onAddPlace: (place: Place) => void
   placeTab: PlaceTab
   setPlaceTab: (tab: PlaceTab) => void
   candidates: Candidate[]
@@ -29,6 +33,9 @@ interface TriggerPlaceStepProps {
 }
 
 export default function TriggerPlaceStep({
+  planId,
+  categoryId,
+  onAddPlace,
   placeTab,
   setPlaceTab,
   candidates,
@@ -55,8 +62,46 @@ export default function TriggerPlaceStep({
     [recommendedPlaces],
   )
 
+  const handleAdd = async (place: {
+    externalId: string
+    name: string
+    address: string
+    latitude: number
+    longitude: number
+    isIndoor: boolean
+    distanceMeters: number
+    reason: string
+  }) => {
+    const body: CreateCandidateRequest = {
+      planId,
+      categoryId,
+      externalId: place.externalId,
+      name: place.name,
+      address: place.address,
+      latitude: place.latitude || 0,
+      longitude: place.longitude || 0,
+      isIndoor: place.isIndoor,
+    }
+
+    const res = await createCandidate(body)
+
+    const savedPlace: Place = {
+      id: res.candidateId,
+      externalId: res.place.externalId,
+      name: res.place.name,
+      location: res.place.address ?? '',
+      latitude: place.latitude,
+      longitude: place.longitude,
+      rating: 0,
+      isIndoor: res.place.isIndoor ?? false,
+      isRepresentative: false,
+    }
+
+    onAddPlace(savedPlace)
+  }
+
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex gap-1 rounded-lg bg-secondary/50 p-1">
         {(['candidates', 'recommend'] as PlaceTab[]).map(tab => (
           <button
@@ -94,7 +139,7 @@ export default function TriggerPlaceStep({
           })}
 
       {placeTab === 'recommend' && (
-        <div className="space-y-3">
+        <div className="mt-3 flex min-h-0 flex-1 flex-col space-y-3">
           <div className="space-y-2">
             {!mapReady && (
               <div className="flex h-[220px] items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground">
@@ -130,7 +175,7 @@ export default function TriggerPlaceStep({
             {isAiLoading ? '추천 중...' : 'AI 추천받기'}
           </button>
 
-          {isAiLoading && <p className="text-sm">불러오는 중...</p>}
+          {isAiLoading && <p className="text-sm mt-2 text-muted-foreground">불러오는 중...</p>}
 
           {!isAiLoading && recommendedPlaces.length === 0 && (
             <p className="text-sm text-muted-foreground">
@@ -138,21 +183,52 @@ export default function TriggerPlaceStep({
             </p>
           )}
 
-          {recommendedPlaces.map(place => (
-            <div
-              key={`${place.externalId}-${place.name}`}
-              className="rounded-lg border border-border/50 p-3"
-            >
-              <div>
-                <p className="text-sm font-medium">{place.name}</p>
-                <p className="text-xs text-muted-foreground">{place.address}</p>
-                <p className="text-xs text-muted-foreground">
-                  거리 {place.distanceMeters.toLocaleString()}m
-                </p>
-                <p className="text-xs text-primary">{place.reason}</p>
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            {recommendedPlaces.map(place => (
+              <div
+                key={`${place.externalId}-${place.name}`}
+                onClick={() => setFocusPlaceId(place.externalId ?? place.name)}
+                className={cn(
+                  'rounded-xl border border-border/50 bg-background/40 p-4 transition-all duration-150',
+                  'hover:bg-secondary/100',
+                )}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-base font-semibold text-primary">{place.name}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-foreground">
+                      <div className="flex w-4 shrink-0 justify-center">
+                        <Compass className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <span>{place.distanceMeters.toLocaleString()}m</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-foreground">
+                      <div className="flex w-4 shrink-0 justify-center">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <span className="line-clamp-1">{place.address}</span>
+                    </div>
+
+                    <p className="text-sm leading-relaxed text-muted-foreground">{place.reason}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation()
+                      handleAdd(place)
+                    }}
+                    className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors hover:bg-secondary"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
