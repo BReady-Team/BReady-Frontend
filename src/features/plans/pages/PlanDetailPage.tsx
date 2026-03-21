@@ -91,22 +91,29 @@ export default function PlanDetailPage() {
     const oldIndex = categories.findIndex(c => c.id === active.id)
     const newIndex = categories.findIndex(c => c.id === over.id)
 
-    const newCategories = arrayMove(categories, oldIndex, newIndex)
+    if (oldIndex === -1 || newIndex === -1) return
 
-    setCategories(newCategories)
+    const prevCategories = categories
+
+    const reorderedCategories = arrayMove(categories, oldIndex, newIndex).map((c, idx) => ({
+      ...c,
+      order: idx + 1,
+    }))
+    setCategories(reorderedCategories)
 
     if (!plan) return
 
     try {
       await updateCategoryOrder(
         plan.id,
-        newCategories.map((c, idx) => ({
+        reorderedCategories.map((c, idx) => ({
           planCategoryId: c.id,
           sequence: idx + 1,
         })),
       )
     } catch (e) {
       console.error(e)
+      setCategories(prevCategories)
       alert('순서 변경 실패')
     }
   }
