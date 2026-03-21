@@ -3,11 +3,13 @@ import type { Category } from '@/types/plan'
 import PlaceItem from './PlaceItem'
 import { cn } from '@/lib/utils'
 import { categoryMeta } from '../constants/categoryMeta'
+import type React from 'react'
 
 interface CategoryCardProps {
   category: Category
   isExpanded: boolean
   isDragging?: boolean
+  dragHandleProps?: React.HTMLAttributes<HTMLElement>
   onToggle: () => void
   onSelectRepresentative: (candidateId: number) => void
   onTrigger: () => void
@@ -20,6 +22,7 @@ export default function CategoryCard({
   category,
   isExpanded,
   isDragging,
+  dragHandleProps,
   onToggle,
   onSelectRepresentative,
   onTrigger,
@@ -47,7 +50,11 @@ export default function CategoryCard({
           isExpanded ? 'bg-primary/5' : 'hover:bg-secondary/30',
         )}
       >
-        <div className="flex h-8 w-8 items-center justify-center text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors">
+        <div
+          {...dragHandleProps}
+          onClick={e => e.stopPropagation()}
+          className="flex h-8 w-8 items-center justify-center text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors"
+        >
           <GripVertical className="h-4 w-4" />
         </div>
 
