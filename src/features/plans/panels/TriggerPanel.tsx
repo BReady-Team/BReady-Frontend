@@ -48,7 +48,7 @@ export default function TriggerPanel({
   const [placeTab, setPlaceTab] = useState<PlaceTab>('candidates')
   const [busy, setBusy] = useState(false)
 
-  const [triggerId, setTriggerId] = useState<number | null>(null)
+  const [currentTriggerId, setCurrentTriggerId] = useState<number | null>(null)
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [recommendedPlaces, setRecommendedPlaces] = useState<
     Array<{
@@ -75,7 +75,7 @@ export default function TriggerPanel({
     setSelectedTrigger(null)
     setPlaceTab('candidates')
     setBusy(false)
-    setTriggerId(null)
+    setCurrentTriggerId(null)
     setIsAiLoading(false)
     setRecommendedPlaces([])
     setRecommendReason(undefined)
@@ -88,7 +88,7 @@ export default function TriggerPanel({
       setBusy(true)
 
       const result = await onTrigger(trigger)
-      setTriggerId(result.triggerId)
+      setCurrentTriggerId(result.triggerId)
 
       setSelectedTrigger(trigger)
 
@@ -128,7 +128,7 @@ export default function TriggerPanel({
   }
 
   const handleRecommendPlace = async () => {
-    if (!triggerId) return
+    if (!currentTriggerId) return
 
     const currentCandidate = candidates.find(c => c.id === representativeCandidateId)
     if (!currentCandidate) return
@@ -151,7 +151,7 @@ export default function TriggerPanel({
           radius: 3000,
           size: 5,
         },
-        { triggerId },
+        { triggerId: currentTriggerId },
       )
 
       setRecommendedPlaces(items)
@@ -161,13 +161,13 @@ export default function TriggerPanel({
   }
 
   const handleRecommendCategory = async () => {
-    if (!triggerId) return
+    if (!currentTriggerId) return
 
     try {
       setIsAiLoading(true)
       setRecommendReason(undefined)
 
-      const result = await recommendCategory({ triggerId })
+      const result = await recommendCategory({ triggerId: currentTriggerId })
       const first = result.items?.[0]
 
       setRecommendReason(first?.reason)
