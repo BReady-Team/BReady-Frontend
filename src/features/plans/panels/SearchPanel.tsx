@@ -30,6 +30,7 @@ export default function SearchPanel({
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
   const [searchMessage, setSearchMessage] = useState<string | null>(null)
+  const [addingPlaceId, setAddingPlaceId] = useState<number | string | null>(null)
 
   const [toast, setToast] = useState<{
     message: string
@@ -117,6 +118,11 @@ export default function SearchPanel({
   }
 
   const handleAdd = async (place: Place) => {
+    // 이미 요청 중이면 무시
+    if (addingPlaceId === place.id) return
+
+    setAddingPlaceId(place.id)
+
     const body: CreateCandidateRequest = {
       planId,
       categoryId,
@@ -146,6 +152,8 @@ export default function SearchPanel({
     } catch (e) {
       console.error('장소 추가 오류:', e)
       showToast('장소를 추가하는 중 오류가 발생했습니다. 다시 시도해주세요.', 'error')
+    } finally {
+      setAddingPlaceId(null)
     }
   }
 
@@ -287,7 +295,12 @@ export default function SearchPanel({
                         e.stopPropagation()
                         handleAdd(place)
                       }}
-                      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors hover:bg-secondary"
+                      disabled={addingPlaceId === place.id}
+                      className={cn(
+                        'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors',
+                        'hover:bg-secondary',
+                        addingPlaceId === place.id && 'opacity-50 cursor-not-allowed',
+                      )}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
