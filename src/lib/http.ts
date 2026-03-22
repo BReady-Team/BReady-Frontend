@@ -19,8 +19,11 @@ http.interceptors.response.use(
   response => response,
   error => {
     const status = error?.response?.status
+    const url = error?.config?.url ?? ''
 
-    if (status === 401 && !isRedirecting) {
+    const isAuthRequest = url.includes('/auth')
+
+    if (status === 401 && !isRedirecting && !isAuthRequest) {
       isRedirecting = true
 
       const { logout } = useAuthStore.getState()
