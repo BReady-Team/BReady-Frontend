@@ -1,63 +1,39 @@
 import { useState } from 'react'
-import {
-  X,
-  ArrowLeft,
-  Check,
-  ArrowRightLeft,
-  RefreshCw,
-  CloudRain,
-  Clock,
-  XCircle,
-  Battery,
-  MapPin,
-} from 'lucide-react'
+import { X, ArrowLeft } from 'lucide-react'
 
-import type { CategoryType, TriggerType, Candidate } from '@/types/plan'
-import { cn } from '@/lib/utils'
+import type { CategoryType, TriggerType, Candidate, Place } from '@/types/plan'
+import { recommendCategory, recommendPlace } from '@/features/plans/api'
 
-const categoryLabels: Record<CategoryType, { label: string }> = {
-  MEAL: { label: '식사' },
-  CAFE: { label: '카페' },
-  EXHIBITION: { label: '전시' },
-  WALK: { label: '산책' },
-  SHOPPING: { label: '쇼핑' },
-  REST: { label: '휴식' },
-}
-
-const triggerIcons: Record<TriggerType, React.ElementType> = {
-  WEATHER_BAD: CloudRain,
-  WAITING_TOO_LONG: Clock,
-  PLACE_CLOSED: XCircle,
-  FATIGUE: Battery,
-  DISTANCE_TOO_FAR: MapPin,
-}
-
-const triggerLabels: Record<TriggerType, string> = {
-  WEATHER_BAD: '날씨가 좋지 않음',
-  WAITING_TOO_LONG: '대기 시간이 너무 김',
-  PLACE_CLOSED: '장소가 영업하지 않음',
-  FATIGUE: '피로함',
-  DISTANCE_TOO_FAR: '거리가 너무 멂',
-}
-
-const mockSearchResults: any[] = []
+import TriggerSelectStep from './TriggerSelectStep'
+import TriggerDecisionStep from './TriggerDecisionStep'
+import TriggerCategoryStep from './TriggerCategoryStep'
+import TriggerPlaceStep from './TriggerPlaceStep'
 
 interface TriggerPanelProps {
   isOpen: boolean
+  planId: number
+  categoryId: number
+  onAddPlace: (place: Place) => void
+  region: string
   categoryType: CategoryType
   candidates: Candidate[]
   representativeCandidateId: number | null
   onClose: () => void
-  onTrigger: (trigger: TriggerType) => Promise<void>
+  onTrigger: (trigger: TriggerType) => Promise<{ triggerId: number }>
   onKeep: () => Promise<void>
   onSwitchPlace: (toCandidateId: number) => Promise<void>
   onChangeCategory: (type: CategoryType) => void
 }
 
 type PlaceTab = 'candidates' | 'recommend'
+type Step = 'select' | 'decision' | 'change-category' | 'change-place'
 
 export default function TriggerPanel({
   isOpen,
+  planId,
+  categoryId,
+  onAddPlace,
+  region,
   categoryType,
   candidates,
   representativeCandidateId,
@@ -67,12 +43,30 @@ export default function TriggerPanel({
   onSwitchPlace,
   onChangeCategory,
 }: TriggerPanelProps) {
-  const [step, setStep] = useState<'select' | 'decision' | 'change-category' | 'change-place'>(
-    'select',
-  )
+  const [step, setStep] = useState<Step>('select')
   const [selectedTrigger, setSelectedTrigger] = useState<TriggerType | null>(null)
   const [placeTab, setPlaceTab] = useState<PlaceTab>('candidates')
   const [busy, setBusy] = useState(false)
+
+  const [triggerId, setTriggerId] = useState<number | null>(null)
+  const [isAiLoading, setIsAiLoading] = useState(false)
+  const [recommendedPlaces, setRecommendedPlaces] = useState<
+    Array<{
+      externalId: string
+      name: string
+      address: string
+      latitude: number
+      longitude: number
+      isIndoor: boolean
+      distanceMeters: number
+      reason: string
+    }>
+  >([])
+
+  const [recommendReason, setRecommendReason] = useState<string | undefined>(undefined)
+  const [recommendedCategory, setRecommendedCategory] = useState<CategoryType | undefined>(
+    undefined,
+  )
 
   if (!isOpen) return null
 
@@ -81,7 +75,106 @@ export default function TriggerPanel({
     setSelectedTrigger(null)
     setPlaceTab('candidates')
     setBusy(false)
+    setTriggerId(null)
+    setIsAiLoading(false)
+    setRecommendedPlaces([])
+    setRecommendReason(undefined)
+    setRecommendedCategory(undefined)
     onClose()
+  }
+
+  const handleSelectTrigger = async (trigger: TriggerType) => {
+    try {
+      setBusy(true)
+
+      const result = await onTrigger(trigger)
+      setTriggerId(result.triggerId)
+
+      setSelectedTrigger(trigger)
+
+      setRecommendedPlaces([])
+      setRecommendReason(undefined)
+      setRecommendedCategory(undefined)
+
+      setStep('decision')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleKeep = async () => {
+    try {
+      setBusy(true)
+      await onKeep()
+      resetAndClose()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleChangeCategory = (type: CategoryType) => {
+    onChangeCategory(type)
+    resetAndClose()
+  }
+
+  const handleSwitchPlace = async (toCandidateId: number) => {
+    try {
+      setBusy(true)
+      await onSwitchPlace(toCandidateId)
+      resetAndClose()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleRecommendPlace = async () => {
+    if (!triggerId) return
+
+    const currentCandidate = candidates.find(c => c.id === representativeCandidateId)
+    if (!currentCandidate) return
+
+    const lat = currentCandidate.place.latitude
+    const lng = currentCandidate.place.longitude
+
+    if (lat == null || lng == null) return
+
+    try {
+      setIsAiLoading(true)
+      setRecommendReason(undefined)
+      setRecommendedCategory(undefined)
+
+      const items = await recommendPlace(
+        {
+          region,
+          latitude: lat,
+          longitude: lng,
+          radius: 3000,
+          size: 5,
+        },
+        { triggerId },
+      )
+
+      setRecommendedPlaces(items)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
+  const handleRecommendCategory = async () => {
+    if (!triggerId) return
+
+    try {
+      setIsAiLoading(true)
+      setRecommendReason(undefined)
+
+      const result = await recommendCategory({ triggerId })
+      const first = result.items?.[0]
+
+      setRecommendReason(first?.reason)
+      setRecommendedCategory(first?.categoryType as CategoryType | undefined)
+    } finally {
+      setIsAiLoading(false)
+    }
   }
 
   return (
@@ -97,7 +190,7 @@ export default function TriggerPanel({
         }}
       />
 
-      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-border bg-background shadow-xl">
+      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col border-l border-border bg-background shadow-xl">
         <header className="flex items-center justify-between border-b border-border/50 p-4">
           <div className="flex items-center gap-2 text-sm font-medium">
             {step !== 'select' && (
@@ -119,204 +212,48 @@ export default function TriggerPanel({
           </button>
         </header>
 
-        <div className="p-6 space-y-6">
-          {/* 트리거 선택 → createTrigger 호출 */}
+        <div className="flex min-h-0 flex-1 flex-col p-6">
           {step === 'select' && (
-            <>
-              <p className="text-sm text-muted-foreground">어떤 상황이 발생했나요?</p>
-
-              <div className="space-y-2">
-                {(Object.keys(triggerLabels) as TriggerType[]).map(trigger => {
-                  const Icon = triggerIcons[trigger]
-                  return (
-                    <button
-                      key={trigger}
-                      disabled={busy}
-                      onClick={async () => {
-                        try {
-                          setBusy(true)
-                          await onTrigger(trigger)
-                          setSelectedTrigger(trigger)
-                          setStep('decision')
-                        } finally {
-                          setBusy(false)
-                        }
-                      }}
-                      className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-4 text-left hover:bg-secondary/50 transition-colors disabled:opacity-60"
-                    >
-                      <Icon className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-sm">{triggerLabels[trigger]}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </>
+            <TriggerSelectStep busy={busy} onSelectTrigger={handleSelectTrigger} />
           )}
 
-          {/* 결정 */}
           {step === 'decision' && selectedTrigger && (
-            <>
-              <div className="rounded-lg bg-secondary/50 p-4">
-                <p className="flex items-center gap-2 text-sm font-medium">
-                  {(() => {
-                    const Icon = triggerIcons[selectedTrigger]
-                    return <Icon className="h-4 w-4 text-primary" />
-                  })()}
-                  {triggerLabels[selectedTrigger]}
-                </p>
-              </div>
-
-              <p className="text-sm text-muted-foreground">어떻게 하시겠어요?</p>
-
-              {/* 그대로 유지 → KEEP 흐름 */}
-              <button
-                disabled={busy}
-                onClick={async () => {
-                  try {
-                    setBusy(true)
-                    await onKeep()
-                    resetAndClose()
-                  } finally {
-                    setBusy(false)
-                  }
-                }}
-                className="flex w-full items-center gap-3 rounded-xl border border-border/50 p-4 hover:bg-secondary/50 disabled:opacity-60"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
-                  <Check className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">그대로 유지</p>
-                  <p className="text-xs text-muted-foreground">현재 계획대로 진행</p>
-                </div>
-              </button>
-
-              {/* 카테고리 변경 (지금은 UI만) */}
-              <button
-                disabled={busy}
-                onClick={() => setStep('change-category')}
-                className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 disabled:opacity-60"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
-                  <ArrowRightLeft className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">카테고리 변경</p>
-                  <p className="text-xs text-muted-foreground">다른 활동으로 전환</p>
-                </div>
-              </button>
-
-              {/* 장소 변경 → SWITCH 흐름 */}
-              <button
-                disabled={busy}
-                onClick={() => setStep('change-place')}
-                className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 disabled:opacity-60"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
-                  <RefreshCw className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">장소 변경</p>
-                  <p className="text-xs text-muted-foreground">다른 장소로 전환</p>
-                </div>
-              </button>
-            </>
+            <TriggerDecisionStep
+              selectedTrigger={selectedTrigger}
+              busy={busy}
+              onKeep={handleKeep}
+              onGoChangeCategory={() => setStep('change-category')}
+              onGoChangePlace={() => setStep('change-place')}
+            />
           )}
 
-          {/* 카테고리 변경 */}
           {step === 'change-category' && (
-            <>
-              <p className="text-sm text-muted-foreground">어떤 활동으로 변경할까요?</p>
-
-              <div className="grid grid-cols-2 gap-2">
-                {(Object.keys(categoryLabels) as CategoryType[])
-                  .filter(t => t !== categoryType)
-                  .map(type => (
-                    <button
-                      key={type}
-                      disabled={busy}
-                      onClick={() => {
-                        onChangeCategory(type)
-                        resetAndClose()
-                      }}
-                      className="rounded-xl border border-border/50 p-4 hover:bg-secondary/50 disabled:opacity-60"
-                    >
-                      <p className="text-sm font-medium">{categoryLabels[type].label}</p>
-                    </button>
-                  ))}
-              </div>
-            </>
+            <TriggerCategoryStep
+              categoryType={categoryType}
+              busy={busy}
+              isAiLoading={isAiLoading}
+              recommendCategory={recommendedCategory}
+              recommendReason={recommendReason}
+              onChangeCategory={handleChangeCategory}
+              onRecommendClick={handleRecommendCategory}
+            />
           )}
 
-          {/* 후보 선택 → SWITCH 확정 */}
           {step === 'change-place' && (
-            <>
-              <div className="flex gap-1 rounded-lg bg-secondary/50 p-1">
-                {(['candidates', 'recommend'] as PlaceTab[]).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setPlaceTab(tab)}
-                    className={cn(
-                      'flex-1 rounded-md px-3 py-2 text-xs font-medium',
-                      placeTab === tab ? 'bg-background shadow' : 'text-muted-foreground',
-                    )}
-                  >
-                    {tab === 'candidates' ? '후보 장소' : '추천'}
-                  </button>
-                ))}
-              </div>
-
-              {placeTab === 'candidates' &&
-                candidates
-                  .filter(c => c.id !== representativeCandidateId)
-                  .map(candidate => {
-                    const place = candidate.place
-                    return (
-                      <button
-                        key={candidate.id}
-                        disabled={busy}
-                        onClick={async () => {
-                          try {
-                            setBusy(true)
-                            await onSwitchPlace(candidate.id)
-                            resetAndClose()
-                          } finally {
-                            setBusy(false)
-                          }
-                        }}
-                        className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
-                      >
-                        <img
-                          src={place.thumbnailUrl ?? '/seoul_forest.jpg'}
-                          className="h-12 w-16 rounded-md object-cover"
-                        />
-                        <div>
-                          <p className="text-sm font-medium">{place.name}</p>
-                          <p className="text-xs text-muted-foreground">{place.location}</p>
-                        </div>
-                      </button>
-                    )
-                  })}
-
-              {placeTab === 'recommend' &&
-                mockSearchResults.map(place => (
-                  <button
-                    key={place.id}
-                    disabled={busy}
-                    onClick={() => resetAndClose()}
-                    className="flex w-full items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-secondary/50 disabled:opacity-60"
-                  >
-                    <img
-                      src={place.thumbnailUrl ?? '/seoul_forest.jpg'}
-                      className="h-12 w-16 rounded-md object-cover"
-                    />
-                    <div>
-                      <p className="text-sm font-medium">{place.name}</p>
-                      <p className="text-xs text-muted-foreground">{place.location}</p>
-                    </div>
-                  </button>
-                ))}
-            </>
+            <TriggerPlaceStep
+              planId={planId}
+              categoryId={categoryId}
+              onAddPlace={onAddPlace}
+              placeTab={placeTab}
+              setPlaceTab={setPlaceTab}
+              candidates={candidates}
+              representativeCandidateId={representativeCandidateId}
+              busy={busy}
+              onSwitchPlace={handleSwitchPlace}
+              recommendedPlaces={recommendedPlaces}
+              isAiLoading={isAiLoading}
+              onRecommendClick={handleRecommendPlace}
+            />
           )}
         </div>
       </aside>

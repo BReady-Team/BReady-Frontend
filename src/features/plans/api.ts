@@ -1,10 +1,10 @@
 import { http } from '@/lib/http'
-import type { PlanListResponse } from './types'
+import type { PlanListResponse, PlanCategorySummary, CandidateResponse } from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
-export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
+export const fetchPlanSummaries = async (page = 0, size = 10): Promise<PlanListResponse> => {
   const res = await http.get('/api/v1/plans', {
-    params: { page: 0, size: 10, order: 'DESC' },
+    params: { page, size, order: 'DESC' },
   })
 
   const data = res.data.data
@@ -13,15 +13,23 @@ export const fetchPlanSummaries = async (): Promise<PlanListResponse> => {
 
   return {
     pageInfo: data.pageInfo,
-    items: (data.items ?? []).map((p: any) => ({
-      id: p.planId,
-      title: p.title,
-      planDate: p.planDate,
-      region: p.region,
+    items: (data.items ?? []).map(
+      (p: {
+        planId: number
+        title: string
+        planDate: string
+        region: string
+        categories?: PlanCategorySummary[]
+      }) => ({
+        id: p.planId,
+        title: p.title,
+        planDate: p.planDate,
+        region: p.region,
 
-      // categories 없는 경우 방어
-      categories: Array.isArray(p.categories) ? p.categories : [],
-    })),
+        // categories 없는 경우 방어
+        categories: Array.isArray(p.categories) ? p.categories : [],
+      }),
+    ),
   }
 }
 
@@ -33,29 +41,37 @@ export async function fetchPlanDetail(planId: number) {
   return {
     plan: data.plan,
 
-    categories: data.categories.map((c: any) => ({
-      id: c.planCategoryId,
-      type: c.categoryType,
-      order: c.sequence,
-      representativeCandidateId: c.representativeCandidateId,
+    categories: data.categories.map(
+      (c: {
+        planCategoryId: number
+        categoryType: string
+        sequence: number
+        representativeCandidateId: number
+        candidates?: CandidateResponse[]
+      }) => ({
+        id: c.planCategoryId,
+        type: c.categoryType,
+        order: c.sequence,
+        representativeCandidateId: c.representativeCandidateId,
 
-      candidates: (c.candidates ?? []).map((cd: any) => ({
-        id: cd.candidateId,
+        candidates: (c.candidates ?? []).map((cd: CandidateResponse) => ({
+          id: cd.candidateId,
 
-        place: {
-          id: cd.place.id,
-          externalId: cd.place.externalId,
-          name: cd.place.name,
-          location: cd.place.address,
-          latitude: cd.place.latitude,
-          longitude: cd.place.longitude,
-          rating: 0,
-          isIndoor: cd.place.isIndoor ?? false,
-        },
+          place: {
+            id: cd.place.id,
+            externalId: cd.place.externalId,
+            name: cd.place.name,
+            location: cd.place.address,
+            latitude: cd.place.latitude,
+            longitude: cd.place.longitude,
+            rating: 0,
+            isIndoor: cd.place.isIndoor ?? false,
+          },
 
-        isRepresentative: cd.isRepresentative ?? false,
-      })),
-    })),
+          isRepresentative: cd.isRepresentative ?? false,
+        })),
+      }),
+    ),
   }
 }
 
@@ -109,6 +125,18 @@ export async function updatePlanCategoryType(
   return res.data.data
 }
 
+// 카테고리 순서 변경
+export async function updateCategoryOrder(
+  planId: number,
+  orders: { planCategoryId: number; sequence: number }[],
+) {
+  const res = await http.patch(`/api/v1/plans/${planId}/categories/order`, {
+    orders,
+  })
+
+  return res.data.data
+}
+
 // 카테고리 삭제
 export async function deletePlanCategory(planId: number, planCategoryId: number) {
   const res = await http.delete(`/api/v1/plans/${planId}/categories/${planCategoryId}`)
@@ -118,5 +146,46 @@ export async function deletePlanCategory(planId: number, planCategoryId: number)
 // 장소 후보 삭제
 export async function deleteCandidate(candidateId: number) {
   const res = await http.delete(`/api/v1/places/candidates/${candidateId}`)
+  return res.data.data
+}
+
+// 장소 추천
+export async function recommendPlace(
+  query: {
+    region: string
+    latitude: number
+    longitude: number
+    radius: number
+    size: number
+  },
+  body: {
+    triggerId: number
+  },
+): Promise<
+  Array<{
+    externalId: string
+    name: string
+    address: string
+    latitude: number
+    longitude: number
+    isIndoor: boolean
+    distanceMeters: number
+    reason: string
+  }>
+> {
+  const res = await http.post('/api/v1/recommendations/places', body, {
+    params: query,
+  })
+  return res.data.data.items ?? []
+}
+
+// 카테고리 추천
+export async function recommendCategory(body: { triggerId: number }): Promise<{
+  items: Array<{
+    categoryType: string
+    reason: string
+  }>
+}> {
+  const res = await http.post('/api/v1/recommendations/categories', body)
   return res.data.data
 }
