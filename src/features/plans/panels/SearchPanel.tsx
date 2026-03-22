@@ -7,6 +7,7 @@ import { createCandidate, searchPlaces, type CreateCandidateRequest } from '@/li
 import { getCurrentLocation } from '@/lib/geolocation'
 import { useKakaoMapLoader } from '@/lib/kakao/useKakaoMapLoader'
 import PlaceMap, { type MapPlaceMarker } from '../components/PlaceMap'
+import axios from 'axios'
 
 interface SearchPanelProps {
   planId: number
@@ -83,8 +84,8 @@ export default function SearchPanel({
       if (mapped.length === 0) {
         setSearchMessage('검색 결과가 없습니다.')
       }
-    } catch (e: any) {
-      if (e?.response?.status === 404) {
+    } catch (e: unknown) {
+      if (axios.isAxiosError(e) && e.response?.status === 404) {
         setResults([])
         setSearchMessage('검색 결과가 없습니다.')
         return
