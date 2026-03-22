@@ -125,6 +125,18 @@ export async function updatePlanCategoryType(
   return res.data.data
 }
 
+// 카테고리 순서 변경
+export async function updateCategoryOrder(
+  planId: number,
+  orders: { planCategoryId: number; sequence: number }[],
+) {
+  const res = await http.patch(`/api/v1/plans/${planId}/categories/order`, {
+    orders,
+  })
+
+  return res.data.data
+}
+
 // 카테고리 삭제
 export async function deletePlanCategory(planId: number, planCategoryId: number) {
   const res = await http.delete(`/api/v1/plans/${planId}/categories/${planCategoryId}`)

@@ -19,8 +19,42 @@ import { useEffect } from 'react'
 import { fetchPlanDetail } from '../api'
 import type { Plan } from '@/types/plan'
 import { updatePlanCategoryType } from '../api'
+import { updateCategoryOrder } from '../api'
 
 import { useAuthStore } from '@/stores/authStore'
+
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
+function SortableItem({
+  category,
+  children,
+}: {
+  category: Category
+  children: (props: { listeners: any; attributes: any; isDragging: boolean }) => React.ReactNode
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: category.id,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ attributes, listeners, isDragging })}
+    </div>
+  )
+}
 
 export default function PlanDetailPage() {
   const { planId } = useParams<{ planId: string }>()
@@ -49,6 +83,40 @@ export default function PlanDetailPage() {
   const [candidateDeleting, setCandidateDeleting] = useState(false)
 
   const activeCategory = categories.find(c => c.id === activeCategoryId) ?? null
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = categories.findIndex(c => c.id === active.id)
+    const newIndex = categories.findIndex(c => c.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const prevCategories = categories
+
+    const reorderedCategories = arrayMove(categories, oldIndex, newIndex).map((c, idx) => ({
+      ...c,
+      order: idx + 1,
+    }))
+    setCategories(reorderedCategories)
+
+    if (!plan) return
+
+    try {
+      await updateCategoryOrder(
+        plan.id,
+        reorderedCategories.map((c, idx) => ({
+          planCategoryId: c.id,
+          sequence: idx + 1,
+        })),
+      )
+    } catch (e) {
+      console.error(e)
+      setCategories(prevCategories)
+      alert('순서 변경 실패')
+    }
+  }
 
   useEffect(() => {
     const run = async () => {
@@ -337,36 +405,45 @@ export default function PlanDetailPage() {
         </header>
 
         <div className="space-y-8">
-          {categories.map(category => (
-            <CategoryCard
-              key={`category-${category.id}`}
-              category={category}
-              isExpanded={expandedCategoryId === category.id}
-              onToggle={() => toggleCategory(category.id)}
-              onSelectRepresentative={candidateId =>
-                handleSelectRepresentative(category.id, candidateId)
-              }
-              onSearch={() => openSearchPanel(category.id)}
-              onTrigger={() => {
-                console.log('trigger category.id =', category.id)
-                openTriggerPanel(category.id)
-              }}
-              onDelete={() => setDeleteCategoryId(category.id)}
-              onDeleteCandidate={candidateId => {
-                const targetCategory = categories.find(cat =>
-                  cat.candidates.some(c => c.id === candidateId),
-                )
-                if (!targetCategory) return
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={categories.map(c => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {categories.map(category => (
+                <SortableItem key={category.id} category={category}>
+                  {({ listeners, attributes, isDragging }) => (
+                    <CategoryCard
+                      category={category}
+                      isExpanded={expandedCategoryId === category.id}
+                      isDragging={isDragging}
+                      dragHandleProps={{ ...listeners, ...attributes }}
+                      onToggle={() => toggleCategory(category.id)}
+                      onSelectRepresentative={candidateId =>
+                        handleSelectRepresentative(category.id, candidateId)
+                      }
+                      onSearch={() => openSearchPanel(category.id)}
+                      onTrigger={() => openTriggerPanel(category.id)}
+                      onDelete={() => setDeleteCategoryId(category.id)}
+                      onDeleteCandidate={candidateId => {
+                        const targetCategory = categories.find(cat =>
+                          cat.candidates.some(c => c.id === candidateId),
+                        )
+                        if (!targetCategory) return
 
-                if (targetCategory.candidates.length <= 1) {
-                  alert('마지막 후보는 삭제할 수 없습니다. 카테고리를 삭제해주세요.')
-                  return
-                }
+                        if (targetCategory.candidates.length <= 1) {
+                          alert('마지막 후보는 삭제할 수 없습니다. 카테고리를 삭제해주세요.')
+                          return
+                        }
 
-                setDeleteCandidateId(candidateId)
-              }}
-            />
-          ))}
+                        setDeleteCandidateId(candidateId)
+                      }}
+                    />
+                  )}
+                </SortableItem>
+              ))}
+            </SortableContext>
+          </DndContext>
 
           <div className="pt-2">
             <AddCategoryButton onAdd={handleAddCategory} />
