@@ -28,6 +28,8 @@ export default function SearchPanel({
   const [isFetching, setIsFetching] = useState(false)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
+  const [searchMessage, setSearchMessage] = useState<string | null>(null)
+
   const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
 
   // 패널 열릴 때 현재 위치 한번 받아오기 (권한 거부면 null 유지)
@@ -52,6 +54,7 @@ export default function SearchPanel({
 
     setIsFetching(true)
     setFocusPlaceId(null)
+    setSearchMessage(null)
 
     try {
       const lat = myLocation?.lat
@@ -71,6 +74,20 @@ export default function SearchPanel({
       }))
 
       setResults(mapped)
+
+      if (mapped.length === 0) {
+        setSearchMessage('검색 결과가 없습니다.')
+      }
+    } catch (e: any) {
+      if (e?.response?.status === 404) {
+        setResults([])
+        setSearchMessage('검색 결과가 없습니다.')
+        return
+      }
+
+      setResults([])
+      setSearchMessage('검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      console.error('Places search error:', e)
     } finally {
       setIsFetching(false)
     }
@@ -143,7 +160,7 @@ export default function SearchPanel({
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col p-6">
-          <p className="text-sm text-muted-foreground">후보 장소에 추가할 곳을 찾아보세요</p>
+          <p className="text-sm text-muted-foreground">후보 장소에 추가할 곳을 찾아보세요.</p>
 
           {/* 지도 */}
           <div className="space-y-2">
@@ -164,7 +181,7 @@ export default function SearchPanel({
             )}
           </div>
 
-          <p className="text-xs text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             현재 위치 마커 + 검색 결과 마커가 지도에 표시됩니다.
           </p>
 
@@ -190,6 +207,10 @@ export default function SearchPanel({
           </form>
 
           {isFetching && <p className="text-sm mt-4">불러오는 중...</p>}
+
+          {!isFetching && searchMessage && (
+            <p className="mt-4 text-sm text-muted-foreground">{searchMessage}</p>
+          )}
 
           {/* 검색 결과 */}
           <div className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
