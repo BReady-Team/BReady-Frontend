@@ -18,7 +18,7 @@ let isRedirecting = false
 http.interceptors.response.use(
   response => response,
   error => {
-    const status = error
+    const status = error?.response?.status
 
     if (status === 401 && !isRedirecting) {
       isRedirecting = true
