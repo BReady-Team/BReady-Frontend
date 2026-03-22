@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Search, MapPin, Plus } from 'lucide-react'
+import { X, Search, MapPin, Plus, CheckCircle2, XCircle } from 'lucide-react'
 import type { Place } from '@/types/plan'
 import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
 import { cn } from '@/lib/utils'
@@ -7,6 +7,7 @@ import { createCandidate, searchPlaces, type CreateCandidateRequest } from '@/li
 import { getCurrentLocation } from '@/lib/geolocation'
 import { useKakaoMapLoader } from '@/lib/kakao/useKakaoMapLoader'
 import PlaceMap, { type MapPlaceMarker } from '../components/PlaceMap'
+import axios from 'axios'
 
 interface SearchPanelProps {
   planId: number
@@ -28,6 +29,14 @@ export default function SearchPanel({
   const [isFetching, setIsFetching] = useState(false)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
+  const [searchMessage, setSearchMessage] = useState<string | null>(null)
+  const [addingPlaceId, setAddingPlaceId] = useState<number | string | null>(null)
+
+  const [toast, setToast] = useState<{
+    message: string
+    type: 'success' | 'error'
+  } | null>(null)
+
   const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
 
   // 패널 열릴 때 현재 위치 한번 받아오기 (권한 거부면 null 유지)
@@ -52,6 +61,7 @@ export default function SearchPanel({
 
     setIsFetching(true)
     setFocusPlaceId(null)
+    setSearchMessage(null)
 
     try {
       const lat = myLocation?.lat
@@ -71,6 +81,20 @@ export default function SearchPanel({
       }))
 
       setResults(mapped)
+
+      if (mapped.length === 0) {
+        setSearchMessage('검색 결과가 없습니다.')
+      }
+    } catch (e: unknown) {
+      if (axios.isAxiosError(e) && e.response?.status === 404) {
+        setResults([])
+        setSearchMessage('검색 결과가 없습니다.')
+        return
+      }
+
+      setResults([])
+      setSearchMessage('검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      console.error('Places search error:', e)
     } finally {
       setIsFetching(false)
     }
@@ -89,7 +113,16 @@ export default function SearchPanel({
     [results],
   )
 
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type })
+  }
+
   const handleAdd = async (place: Place) => {
+    // 이미 요청 중이면 무시
+    if (addingPlaceId === place.id) return
+
+    setAddingPlaceId(place.id)
+
     const body: CreateCandidateRequest = {
       planId,
       categoryId,
@@ -101,19 +134,27 @@ export default function SearchPanel({
       isIndoor: place.isIndoor,
     }
 
-    const res = await createCandidate(body)
+    try {
+      const res = await createCandidate(body)
 
-    const savedPlace: Place = {
-      id: res.candidateId,
-      externalId: res.place.externalId,
-      name: res.place.name,
-      location: res.place.address ?? '',
-      rating: 0,
-      isIndoor: res.place.isIndoor ?? false,
-      isRepresentative: false,
+      const savedPlace: Place = {
+        id: res.candidateId,
+        externalId: res.place.externalId,
+        name: res.place.name,
+        location: res.place.address ?? '',
+        rating: 0,
+        isIndoor: res.place.isIndoor ?? false,
+        isRepresentative: false,
+      }
+
+      onAddPlace(savedPlace)
+      showToast(`"${savedPlace.name}" 가 후보 장소에 추가되었습니다.`, 'success')
+    } catch (e) {
+      console.error('장소 추가 오류:', e)
+      showToast('장소를 추가하는 중 오류가 발생했습니다. 다시 시도해주세요.', 'error')
+    } finally {
+      setAddingPlaceId(null)
     }
-
-    onAddPlace(savedPlace)
   }
 
   return (
@@ -133,6 +174,31 @@ export default function SearchPanel({
         border-l border-border bg-background shadow-xl"
       >
         <header className="flex items-center justify-between border-b border-border/50 p-4">
+          {toast && (
+            <div className="absolute right-4 top-16 z-50">
+              <div
+                role={toast.type === 'error' ? 'alert' : 'status'}
+                aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+                className="flex items-center gap-3 rounded-xl border border-border/60 bg-background px-5 py-4 shadow-lg"
+              >
+                {toast.type === 'success' ? (
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-500" />
+                )}
+
+                <p className="text-sm font-medium text-foreground">{toast.message}</p>
+
+                <button
+                  type="button"
+                  onClick={() => setToast(null)}
+                  className="ml-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          )}
           <h2 className="text-sm font-medium">장소 추가</h2>
           <button
             onClick={onClose}
@@ -143,7 +209,7 @@ export default function SearchPanel({
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col p-6">
-          <p className="text-sm text-muted-foreground">후보 장소에 추가할 곳을 찾아보세요</p>
+          <p className="text-sm text-muted-foreground">후보 장소에 추가할 곳을 찾아보세요.</p>
 
           {/* 지도 */}
           <div className="space-y-2">
@@ -164,7 +230,7 @@ export default function SearchPanel({
             )}
           </div>
 
-          <p className="text-xs text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             현재 위치 마커 + 검색 결과 마커가 지도에 표시됩니다.
           </p>
 
@@ -190,6 +256,10 @@ export default function SearchPanel({
           </form>
 
           {isFetching && <p className="text-sm mt-4">불러오는 중...</p>}
+
+          {!isFetching && searchMessage && (
+            <p className="mt-4 text-sm text-muted-foreground">{searchMessage}</p>
+          )}
 
           {/* 검색 결과 */}
           <div className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
@@ -225,7 +295,12 @@ export default function SearchPanel({
                         e.stopPropagation()
                         handleAdd(place)
                       }}
-                      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors hover:bg-secondary"
+                      disabled={addingPlaceId === place.id}
+                      className={cn(
+                        'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 transition-colors',
+                        'hover:bg-secondary',
+                        addingPlaceId === place.id && 'opacity-50 cursor-not-allowed',
+                      )}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
