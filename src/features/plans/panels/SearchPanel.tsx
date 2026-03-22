@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Search, MapPin, Plus } from 'lucide-react'
+import { X, Search, MapPin, Plus, CheckCircle2 } from 'lucide-react'
 import type { Place } from '@/types/plan'
 import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
 import { cn } from '@/lib/utils'
@@ -29,6 +29,8 @@ export default function SearchPanel({
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
   const [searchMessage, setSearchMessage] = useState<string | null>(null)
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
 
@@ -106,6 +108,10 @@ export default function SearchPanel({
     [results],
   )
 
+  const showToast = (message: string) => {
+    setToastMessage(message)
+  }
+
   const handleAdd = async (place: Place) => {
     const body: CreateCandidateRequest = {
       planId,
@@ -118,19 +124,25 @@ export default function SearchPanel({
       isIndoor: place.isIndoor,
     }
 
-    const res = await createCandidate(body)
+    try {
+      const res = await createCandidate(body)
 
-    const savedPlace: Place = {
-      id: res.candidateId,
-      externalId: res.place.externalId,
-      name: res.place.name,
-      location: res.place.address ?? '',
-      rating: 0,
-      isIndoor: res.place.isIndoor ?? false,
-      isRepresentative: false,
+      const savedPlace: Place = {
+        id: res.candidateId,
+        externalId: res.place.externalId,
+        name: res.place.name,
+        location: res.place.address ?? '',
+        rating: 0,
+        isIndoor: res.place.isIndoor ?? false,
+        isRepresentative: false,
+      }
+
+      onAddPlace(savedPlace)
+      showToast(`"${savedPlace.name}" 가 후보 장소에 추가되었습니다.`)
+    } catch (e) {
+      console.error('장소 추가 오류:', e)
+      showToast('장소를 추가하는 중 오류가 발생했습니다. 다시 시도해주세요.')
     }
-
-    onAddPlace(savedPlace)
   }
 
   return (
@@ -150,6 +162,23 @@ export default function SearchPanel({
         border-l border-border bg-background shadow-xl"
       >
         <header className="flex items-center justify-between border-b border-border/50 p-4">
+          {toastMessage && (
+            <div className="absolute right-4 top-16 z-50">
+              <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background px-5 py-4 shadow-lg">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+
+                <p className="text-sm font-medium text-foreground">{toastMessage}</p>
+
+                <button
+                  type="button"
+                  onClick={() => setToastMessage(null)}
+                  className="ml-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          )}
           <h2 className="text-sm font-medium">장소 추가</h2>
           <button
             onClick={onClose}
