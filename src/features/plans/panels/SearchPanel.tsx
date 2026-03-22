@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Search, MapPin, Plus, CheckCircle2 } from 'lucide-react'
+import { X, Search, MapPin, Plus, CheckCircle2, XCircle } from 'lucide-react'
 import type { Place } from '@/types/plan'
 import type { PlaceCategoryType, PlaceSearchResponse } from '@/lib/api/place'
 import { cn } from '@/lib/utils'
@@ -30,7 +30,10 @@ export default function SearchPanel({
   const [focusPlaceId, setFocusPlaceId] = useState<number | string | null>(null)
   const [searchMessage, setSearchMessage] = useState<string | null>(null)
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [toast, setToast] = useState<{
+    message: string
+    type: 'success' | 'error'
+  } | null>(null)
 
   const mapReady = useKakaoMapLoader(import.meta.env.VITE_KAKAO_MAP_APP_KEY)
 
@@ -108,8 +111,8 @@ export default function SearchPanel({
     [results],
   )
 
-  const showToast = (message: string) => {
-    setToastMessage(message)
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type })
   }
 
   const handleAdd = async (place: Place) => {
@@ -138,10 +141,10 @@ export default function SearchPanel({
       }
 
       onAddPlace(savedPlace)
-      showToast(`"${savedPlace.name}" 가 후보 장소에 추가되었습니다.`)
+      showToast(`"${savedPlace.name}" 가 후보 장소에 추가되었습니다.`, 'success')
     } catch (e) {
       console.error('장소 추가 오류:', e)
-      showToast('장소를 추가하는 중 오류가 발생했습니다. 다시 시도해주세요.')
+      showToast('장소를 추가하는 중 오류가 발생했습니다. 다시 시도해주세요.', 'error')
     }
   }
 
@@ -162,16 +165,24 @@ export default function SearchPanel({
         border-l border-border bg-background shadow-xl"
       >
         <header className="flex items-center justify-between border-b border-border/50 p-4">
-          {toastMessage && (
+          {toast && (
             <div className="absolute right-4 top-16 z-50">
-              <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background px-5 py-4 shadow-lg">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
+              <div
+                role={toast.type === 'error' ? 'alert' : 'status'}
+                aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+                className="flex items-center gap-3 rounded-xl border border-border/60 bg-background px-5 py-4 shadow-lg"
+              >
+                {toast.type === 'success' ? (
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-500" />
+                )}
 
-                <p className="text-sm font-medium text-foreground">{toastMessage}</p>
+                <p className="text-sm font-medium text-foreground">{toast.message}</p>
 
                 <button
                   type="button"
-                  onClick={() => setToastMessage(null)}
+                  onClick={() => setToast(null)}
                   className="ml-2 text-xs text-muted-foreground hover:text-foreground"
                 >
                   닫기
