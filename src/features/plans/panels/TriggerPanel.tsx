@@ -128,15 +128,21 @@ export default function TriggerPanel({
   }
 
   const handleRecommendPlace = async () => {
-    if (!currentTriggerId) return
+    if (!currentTriggerId || !selectedTrigger) return
 
     const currentCandidate = candidates.find(c => c.id === representativeCandidateId)
-    if (!currentCandidate) return
+    console.log('[대표 후보]', currentCandidate)
 
-    const lat = currentCandidate.place.latitude
-    const lng = currentCandidate.place.longitude
+    const latitude = currentCandidate?.place?.latitude
+    const longitude = currentCandidate?.place?.longitude
 
-    if (lat == null || lng == null) return
+    console.log('[좌표]', { latitude, longitude })
+
+    const needsCurrentLocation =
+      selectedTrigger === 'FATIGUE' || selectedTrigger === 'DISTANCE_TOO_FAR'
+
+    const fallbackToRepresentativeBase =
+      needsCurrentLocation && (latitude == null || longitude == null)
 
     try {
       setIsAiLoading(true)
@@ -146,13 +152,17 @@ export default function TriggerPanel({
       const items = await recommendPlace(
         {
           region,
-          latitude: lat,
-          longitude: lng,
           radius: 3000,
           size: 5,
+          ...(latitude != null ? { latitude } : {}),
+          ...(longitude != null ? { longitude } : {}),
         },
         { triggerId: currentTriggerId },
       )
+
+      if (fallbackToRepresentativeBase) {
+        setRecommendReason('현재 위치를 사용할 수 없어 기존 장소 기준으로 추천했어요.')
+      }
 
       setRecommendedPlaces(items)
     } finally {
