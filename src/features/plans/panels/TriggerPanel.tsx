@@ -131,12 +131,9 @@ export default function TriggerPanel({
     if (!currentTriggerId || !selectedTrigger) return
 
     const currentCandidate = candidates.find(c => c.id === representativeCandidateId)
-    console.log('[대표 후보]', currentCandidate)
 
     const latitude = currentCandidate?.place?.latitude
     const longitude = currentCandidate?.place?.longitude
-
-    console.log('[좌표]', { latitude, longitude })
 
     const needsCurrentLocation =
       selectedTrigger === 'FATIGUE' || selectedTrigger === 'DISTANCE_TOO_FAR'
