@@ -152,11 +152,11 @@ export async function deleteCandidate(candidateId: number) {
 // 장소 추천
 export async function recommendPlace(
   query: {
-    region: string
-    latitude: number
-    longitude: number
-    radius: number
-    size: number
+    region?: string
+    latitude?: number
+    longitude?: number
+    radius?: number
+    size?: number
   },
   body: {
     triggerId: number
