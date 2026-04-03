@@ -313,8 +313,8 @@ export default function PlanDetailPage() {
       setShareLoading(true)
       setShareCopied(false)
 
-      const url = await createPlanShareLink(plan.id)
-      setShareLink(url)
+      const token = await createPlanShareLink(plan.id)
+      setShareLink(`${window.location.origin}/shared/plans/${token}`)
       setShareOpen(true)
     } catch (e) {
       console.error(e)

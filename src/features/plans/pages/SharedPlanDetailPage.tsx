@@ -133,6 +133,7 @@ export default function SharedPlanDetailPage() {
               onTrigger={() => {}}
               onDelete={() => {}}
               onDeleteCandidate={() => {}}
+              readOnly
             />
           ))}
         </div>

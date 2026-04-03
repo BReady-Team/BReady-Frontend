@@ -16,6 +16,7 @@ interface CategoryCardProps {
   onSearch: () => void
   onDelete: () => void
   onDeleteCandidate: (candidateId: number) => void
+  readOnly?: boolean
 }
 
 export default function CategoryCard({
@@ -29,6 +30,7 @@ export default function CategoryCard({
   onSearch,
   onDelete,
   onDeleteCandidate,
+  readOnly = false,
 }: CategoryCardProps) {
   const { type, representativeCandidateId, candidates } = category
   const { label, Icon } = categoryMeta[type]
@@ -50,13 +52,15 @@ export default function CategoryCard({
           isExpanded ? 'bg-primary/5' : 'hover:bg-secondary/30',
         )}
       >
-        <div
-          {...dragHandleProps}
-          onClick={e => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors"
-        >
-          <GripVertical className="h-4 w-4" />
-        </div>
+        {!readOnly && (
+          <div
+            {...dragHandleProps}
+            onClick={e => e.stopPropagation()}
+            className="flex h-8 w-8 items-center justify-center text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors"
+          >
+            <GripVertical className="h-4 w-4" />
+          </div>
+        )}
 
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
           <Icon className="h-5 w-5 text-primary" />
@@ -68,17 +72,19 @@ export default function CategoryCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={`${label} 카테고리 삭제`}
-            onClick={e => {
-              e.stopPropagation()
-              onDelete()
-            }}
-            className="p-1 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              aria-label={`${label} 카테고리 삭제`}
+              onClick={e => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="p-1 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
 
           <ChevronDown
             className={cn(
@@ -100,7 +106,7 @@ export default function CategoryCard({
             isRepresentative
             onSelect={() => {}}
             onDelete={() => onDeleteCandidate(representativeCandidate.id)}
-            canDelete={candidates.length > 1}
+            canDelete={!readOnly && candidates.length > 1}
           />
         ) : (
           <div className="rounded-xl border border-dashed border-border/50 bg-background/30 px-4 py-6 text-center text-sm text-muted-foreground">
@@ -108,19 +114,21 @@ export default function CategoryCard({
           </div>
         )}
 
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation()
-              onTrigger()
-            }}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/15"
-          >
-            <Zap className="h-4 w-4" />
-            트리거 발생
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                onTrigger()
+              }}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/15"
+            >
+              <Zap className="h-4 w-4" />
+              트리거 발생
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 후보 장소 목록 */}
@@ -128,17 +136,19 @@ export default function CategoryCard({
         <div className="border-t border-border/60 bg-secondary/15 px-5 py-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">후보 장소</p>
-            <button
-              type="button"
-              onClick={e => {
-                e.stopPropagation()
-                onSearch()
-              }}
-              className="flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              장소 추가
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation()
+                  onSearch()
+                }}
+                className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                장소 추가
+              </button>
+            )}
           </div>
 
           {candidates.length > 0 ? (
@@ -148,9 +158,12 @@ export default function CategoryCard({
                   key={candidate.id}
                   place={candidate.place}
                   isRepresentative={candidate.id === representativeCandidateId}
-                  onSelect={() => onSelectRepresentative(candidate.id)}
+                  onSelect={() => {
+                    if (readOnly) return
+                    onSelectRepresentative(candidate.id)
+                  }}
                   onDelete={() => onDeleteCandidate(candidate.id)}
-                  canDelete={candidates.length > 1}
+                  canDelete={!readOnly && candidates.length > 1}
                 />
               ))}
             </div>
