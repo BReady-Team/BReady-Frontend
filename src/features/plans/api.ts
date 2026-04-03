@@ -112,6 +112,12 @@ export async function deletePlan(planId: number) {
   await http.delete(`/api/v1/plans/${planId}`)
 }
 
+// 플랜 공유 링크 생성 POST /api/v1/plans/{planId}/share
+export async function createPlanShareLink(planId: number): Promise<string> {
+  const res = await http.post(`/api/v1/plans/${planId}/share`)
+  return res.data.data
+}
+
 // 카테고리 타입 변경
 export async function updatePlanCategoryType(
   planId: number,
