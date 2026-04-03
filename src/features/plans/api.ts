@@ -118,6 +118,12 @@ export async function createPlanShareLink(planId: number): Promise<string> {
   return res.data.data
 }
 
+// 공유 플랜 상세 조회 GET /api/v1/plans/shared/{shareToken}
+export async function fetchSharedPlanDetail(shareToken: string) {
+  const res = await http.get(`/api/v1/plans/shared/${shareToken}`)
+  return res.data.data
+}
+
 // 카테고리 타입 변경
 export async function updatePlanCategoryType(
   planId: number,
