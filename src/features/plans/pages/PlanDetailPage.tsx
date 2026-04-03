@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin } from 'lucide-react'
+import { Calendar, MapPin, Share2, SquarePen, Trash2, Copy, X } from 'lucide-react'
 
 import CategoryCard from '../components/CategoryCard'
 import AddCategoryButton from '../components/AddCategoryButton'
@@ -11,7 +11,7 @@ import { formatKoreanDate } from '@/lib/date'
 
 import { setRepresentative } from '@/lib/api/place'
 import { createTrigger, createDecision, executeSwitch } from '@/lib/api/trigger'
-import { deletePlan, deletePlanCategory, deleteCandidate } from '../api'
+import { createPlanShareLink, deletePlan, deletePlanCategory, deleteCandidate } from '../api'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import type { Place, Category, CategoryType, TriggerType, Candidate } from '@/types/plan'
 import { createCategory } from '@/lib/api/category'
@@ -78,6 +78,11 @@ export default function PlanDetailPage() {
 
   const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null)
   const [categoryDeleting, setCategoryDeleting] = useState(false)
+
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareLink, setShareLink] = useState('')
+  const [shareLoading, setShareLoading] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
 
   const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null)
   const [candidateDeleting, setCandidateDeleting] = useState(false)
@@ -301,6 +306,34 @@ export default function PlanDetailPage() {
     closePanel()
   }
 
+  const handleOpenShareModal = async () => {
+    if (!plan) return
+
+    try {
+      setShareLoading(true)
+      setShareCopied(false)
+
+      const url = await createPlanShareLink(plan.id)
+      setShareLink(url)
+      setShareOpen(true)
+    } catch (e) {
+      console.error(e)
+      alert('공유 링크 생성 실패')
+    } finally {
+      setShareLoading(false)
+    }
+  }
+
+  const handleCopyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink)
+      setShareCopied(true)
+    } catch (e) {
+      console.error(e)
+      alert('링크 복사 실패')
+    }
+  }
+
   // SWITCH 확정
   const handleSwitchPlace = async (toCandidateId: number) => {
     if (!activeCategory) return
@@ -366,37 +399,40 @@ export default function PlanDetailPage() {
             {isManageOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsManageOpen(false)} />
-                <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl border border-border bg-background p-1 shadow-lg">
+                <div className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-border bg-background p-1.5 shadow-lg">
                   <button
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 hover:bg-secondary"
                     onClick={() => {
                       setIsManageOpen(false)
                       navigate(`/plans/${plan.id}/edit`)
                     }}
                   >
-                    ✏️ 수정
+                    <SquarePen className="h-4 w-4" />
+                    수정
                   </button>
 
                   <button
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 hover:bg-secondary"
                     onClick={() => {
                       setIsManageOpen(false)
-                      console.log('공유')
+                      handleOpenShareModal()
                     }}
                   >
-                    🔗 공유
+                    <Share2 className="h-4 w-4" />
+                    {shareLoading ? '생성 중...' : '공유'}
                   </button>
 
                   <div className="my-1 h-px bg-border" />
 
                   <button
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors duration-200 hover:bg-destructive/10"
                     onClick={() => {
                       setIsManageOpen(false)
                       setDeleteOpen(true)
                     }}
                   >
-                    🗑️ 삭제
+                    <Trash2 className="h-4 w-4" />
+                    삭제
                   </button>
                 </div>
               </>
@@ -477,6 +513,63 @@ export default function PlanDetailPage() {
           onSwitchPlace={handleSwitchPlace}
           onChangeCategory={handleChangeCategory}
         />
+      )}
+
+      {shareOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]"
+            onClick={() => setShareOpen(false)}
+          />
+
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+            <div className="w-full max-w-md rounded-2xl border border-border bg-background p-6 shadow-2xl">
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold tracking-tight">공유 링크</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    링크를 복사해 일정을 공유하세요.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShareOpen(false)}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-secondary"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm break-all">
+                {shareLink}
+              </div>
+
+              <div className="mt-2 min-h-5 text-xs text-muted-foreground">
+                {shareCopied ? '링크가 복사되었습니다.' : ''}
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShareOpen(false)}
+                  className="rounded-lg border border-border px-4 py-2 text-sm transition-colors duration-200 hover:bg-secondary"
+                >
+                  닫기
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyShareLink}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity duration-200 hover:opacity-90"
+                >
+                  <Copy className="h-4 w-4" />
+                  URL 복사
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       <ConfirmDialog
