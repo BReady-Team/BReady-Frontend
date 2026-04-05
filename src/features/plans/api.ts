@@ -1,5 +1,10 @@
 import { http } from '@/lib/http'
-import type { PlanListResponse, PlanCategorySummary, CandidateResponse } from './types'
+import type {
+  PlanListResponse,
+  PlanCategorySummary,
+  CandidateResponse,
+  SharedPlanDetailResponse,
+} from './types'
 
 // 플랜 목록 조회 GET /api/v1/plans
 export const fetchPlanSummaries = async (page = 0, size = 10): Promise<PlanListResponse> => {
@@ -119,9 +124,45 @@ export async function createPlanShareLink(planId: number): Promise<string> {
 }
 
 // 공유 플랜 상세 조회 GET /api/v1/plans/shared/{shareToken}
-export async function fetchSharedPlanDetail(shareToken: string) {
+export async function fetchSharedPlanDetail(shareToken: string): Promise<SharedPlanDetailResponse> {
   const res = await http.get(`/api/v1/plans/shared/${shareToken}`)
-  return res.data.data
+  const data = res.data.data
+
+  return {
+    plan: data.plan,
+
+    categories: (data.categories ?? []).map(
+      (c: {
+        planCategoryId: number
+        categoryType: string
+        sequence: number
+        representativeCandidateId: number
+        candidates?: CandidateResponse[]
+      }) => ({
+        id: c.planCategoryId,
+        type: c.categoryType,
+        order: c.sequence,
+        representativeCandidateId: c.representativeCandidateId,
+
+        candidates: (c.candidates ?? []).map((cd: CandidateResponse) => ({
+          id: cd.candidateId,
+
+          place: {
+            id: cd.place.id,
+            externalId: cd.place.externalId,
+            name: cd.place.name,
+            location: cd.place.address,
+            latitude: cd.place.latitude,
+            longitude: cd.place.longitude,
+            rating: 0,
+            isIndoor: cd.place.isIndoor ?? false,
+          },
+
+          isRepresentative: cd.isRepresentative ?? false,
+        })),
+      }),
+    ),
+  }
 }
 
 // 카테고리 타입 변경
