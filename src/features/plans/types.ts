@@ -105,7 +105,7 @@ export type SharedPlanDetailResponse = {
   }
   categories: Array<{
     id: number
-    type: string
+    type: CategoryType
     order: number
     representativeCandidateId: number
     candidates: Array<{

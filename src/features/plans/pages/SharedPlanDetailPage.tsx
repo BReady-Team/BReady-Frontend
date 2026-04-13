@@ -44,48 +44,7 @@ export default function SharedPlanDetailPage() {
           ownerProfileImageUrl: data.plan.ownerProfileImageUrl,
         })
 
-        setCategories(
-          (data.categories ?? []).map(
-            (c: {
-              planCategoryId: number
-              categoryType: string
-              sequence: number
-              representativeCandidateId: number
-              candidates?: Array<{
-                candidateId: number
-                isRepresentative?: boolean
-                place: {
-                  id: number
-                  externalId: string
-                  name: string
-                  address: string
-                  latitude: number
-                  longitude: number
-                  isIndoor?: boolean
-                }
-              }>
-            }) => ({
-              id: c.planCategoryId,
-              type: c.categoryType,
-              order: c.sequence,
-              representativeCandidateId: c.representativeCandidateId,
-              candidates: (c.candidates ?? []).map(cd => ({
-                id: cd.candidateId,
-                isRepresentative: cd.isRepresentative ?? false,
-                place: {
-                  id: cd.place.id,
-                  externalId: cd.place.externalId,
-                  name: cd.place.name,
-                  location: cd.place.address,
-                  latitude: cd.place.latitude,
-                  longitude: cd.place.longitude,
-                  rating: 0,
-                  isIndoor: cd.place.isIndoor ?? false,
-                },
-              })),
-            }),
-          ),
-        )
+        setCategories(data.categories)
       } catch (e) {
         console.error(e)
         setError('공유된 플랜 정보를 불러오지 못했습니다.')
