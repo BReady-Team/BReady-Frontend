@@ -112,7 +112,7 @@ export type SharedPlanDetailResponse = {
       id: number
       place: {
         id: number
-        externalId: string
+        externalId?: string
         name: string
         location: string
         latitude: number
