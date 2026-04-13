@@ -90,3 +90,37 @@ export interface PlanDetailCandidateDto {
   }
   isRepresentative: boolean
 }
+
+export type SharedPlanDetailResponse = {
+  plan: {
+    planId: number
+    title: string
+    planDate: string
+    region: string
+    status: string
+    ownerNickname: string
+    ownerProfileImageUrl: string | null
+    createdAt: string
+    updatedAt: string
+  }
+  categories: Array<{
+    id: number
+    type: CategoryType
+    order: number
+    representativeCandidateId: number
+    candidates: Array<{
+      id: number
+      place: {
+        id: number
+        externalId?: string
+        name: string
+        location: string
+        latitude: number
+        longitude: number
+        rating: number
+        isIndoor: boolean
+      }
+      isRepresentative: boolean
+    }>
+  }>
+}

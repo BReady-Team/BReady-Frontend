@@ -1,5 +1,11 @@
 import { http } from '@/lib/http'
-import type { PlanListResponse, PlanCategorySummary, CandidateResponse } from './types'
+import type {
+  PlanListResponse,
+  PlanCategorySummary,
+  CandidateResponse,
+  SharedPlanDetailResponse,
+} from './types'
+import type { CategoryType } from '@/types/plan'
 
 // 플랜 목록 조회 GET /api/v1/plans
 export const fetchPlanSummaries = async (page = 0, size = 10): Promise<PlanListResponse> => {
@@ -112,6 +118,54 @@ export async function deletePlan(planId: number) {
   await http.delete(`/api/v1/plans/${planId}`)
 }
 
+// 플랜 공유 링크 생성 POST /api/v1/plans/{planId}/share
+export async function createPlanShareLink(planId: number): Promise<string> {
+  const res = await http.post(`/api/v1/plans/${planId}/share`)
+  return res.data.data
+}
+
+// 공유 플랜 상세 조회 GET /api/v1/plans/shared/{shareToken}
+export async function fetchSharedPlanDetail(shareToken: string): Promise<SharedPlanDetailResponse> {
+  const res = await http.get(`/api/v1/plans/shared/${shareToken}`)
+  const data = res.data.data
+
+  return {
+    plan: data.plan,
+
+    categories: (data.categories ?? []).map(
+      (c: {
+        planCategoryId: number
+        categoryType: string
+        sequence: number
+        representativeCandidateId: number
+        candidates?: CandidateResponse[]
+      }) => ({
+        id: c.planCategoryId,
+        type: c.categoryType as CategoryType,
+        order: c.sequence,
+        representativeCandidateId: c.representativeCandidateId,
+
+        candidates: (c.candidates ?? []).map((cd: CandidateResponse) => ({
+          id: cd.candidateId,
+
+          place: {
+            id: cd.place.id,
+            externalId: cd.place.externalId,
+            name: cd.place.name,
+            location: cd.place.address,
+            latitude: cd.place.latitude,
+            longitude: cd.place.longitude,
+            rating: 0,
+            isIndoor: cd.place.isIndoor ?? false,
+          },
+
+          isRepresentative: cd.isRepresentative ?? false,
+        })),
+      }),
+    ),
+  }
+}
+
 // 카테고리 타입 변경
 export async function updatePlanCategoryType(
   planId: number,
@@ -152,11 +206,11 @@ export async function deleteCandidate(candidateId: number) {
 // 장소 추천
 export async function recommendPlace(
   query: {
-    region: string
-    latitude: number
-    longitude: number
-    radius: number
-    size: number
+    region?: string
+    latitude?: number
+    longitude?: number
+    radius?: number
+    size?: number
   },
   body: {
     triggerId: number

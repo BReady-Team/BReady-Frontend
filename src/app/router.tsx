@@ -16,6 +16,7 @@ import AuthLayout from '../components/layout/AuthLayout'
 
 import ProtectedRoute from '../routes/ProtectedRoute'
 import SocialCallbackPage from '@/features/auth/pages/SocialCallbackPage'
+import SharedPlanDetailPage from '@/features/plans/pages/SharedPlanDetailPage'
 
 export const router = createBrowserRouter([
   // 로그인 전 영역
@@ -25,8 +26,9 @@ export const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },
-      { path: '/auth/kakao/callback', element: <SocialCallbackPage provider='KAKAO' /> },
-      { path: '/auth/naver/callback', element: <SocialCallbackPage provider='NAVER' /> },
+      { path: '/auth/kakao/callback', element: <SocialCallbackPage provider="KAKAO" /> },
+      { path: '/auth/naver/callback', element: <SocialCallbackPage provider="NAVER" /> },
+      { path: '/shared/plans/:shareToken', element: <SharedPlanDetailPage /> },
     ],
   },
 
