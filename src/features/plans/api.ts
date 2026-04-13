@@ -5,6 +5,7 @@ import type {
   CandidateResponse,
   SharedPlanDetailResponse,
 } from './types'
+import type { CategoryType } from '@/types/plan'
 
 // 플랜 목록 조회 GET /api/v1/plans
 export const fetchPlanSummaries = async (page = 0, size = 10): Promise<PlanListResponse> => {
@@ -140,7 +141,7 @@ export async function fetchSharedPlanDetail(shareToken: string): Promise<SharedP
         candidates?: CandidateResponse[]
       }) => ({
         id: c.planCategoryId,
-        type: c.categoryType,
+        type: c.categoryType as CategoryType,
         order: c.sequence,
         representativeCandidateId: c.representativeCandidateId,
 
